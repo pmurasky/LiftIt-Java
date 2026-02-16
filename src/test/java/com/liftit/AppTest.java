@@ -2,11 +2,11 @@ package com.liftit;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class AppTest {
     @Test
     void greetingReturnsExpectedMessage() {
-        assertEquals("LiftIt Java starter is running.", App.greeting());
+        assertThat(App.greeting()).isEqualTo("LiftIt Java starter is running.");
     }
 }
