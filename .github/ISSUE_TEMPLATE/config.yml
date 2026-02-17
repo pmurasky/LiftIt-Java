@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/pmurasky/LiftIt-Java/discussions
+    about: Ask questions, share ideas, or discuss the project
+  - name: 📚 Engineering Standards
+    url: https://github.com/pmurasky/LiftIt-Java/blob/main/AGENTS.md
+    about: Review the project's engineering standards and guidelines
