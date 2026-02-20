@@ -57,6 +57,12 @@ Types: feat, fix, refactor, test, docs, perf, chore
 - Descriptive test names (e.g., `shouldSelectLatestVersionWhenAvailable`)
 - Never commit failing tests (every commit must be production-ready, no exceptions)
 
+### 8. Dependency Versioning
+- **Always use the latest stable (GA) version** when adding any dependency — never intentionally use an older version
+- **Verify no known CVEs** before adding: check [NVD](https://nvd.nist.gov/), [OSV](https://osv.dev/), or [GitHub Advisory Database](https://github.com/advisories)
+- **BOM-managed projects** (Spring Boot, etc.): trust the BOM for transitive deps — do not override BOM-managed versions manually
+- **Update on disclosure**: when a CVE is disclosed for a dependency, update immediately — do not wait for a scheduled review
+
 ## External File Loading
 
 CRITICAL: When you encounter a file reference below, use your Read tool to load it on a need-to-know basis. They contain detailed instructions relevant to SPECIFIC tasks.
