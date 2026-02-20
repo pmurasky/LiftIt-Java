@@ -57,12 +57,72 @@
 
 ## Security & Identity
 
+### Overview
+
 - Authentication required for all endpoints
-- Auth0 as external identity provider
-- Auth0 Hosted Universal Login
-- Spring Security Resource Server (JWT validation)
-- Local `users` table for application profile data
-- Authentication handled externally; profiles stored internally
+- Auth0 as external identity provider (Auth0 Hosted Universal Login)
+- Spring Security configured as a JWT Resource Server (validates Auth0-issued tokens)
+- Local `users` table for application profile data only — Auth0 owns credentials
+- The backend **never issues, stores, or refreshes tokens** — Auth0 does
+
+### Authentication Flow
+
+```
+1. Frontend redirects user to Auth0 Universal Login
+2. User authenticates on Auth0 (not on LiftIt backend)
+3. Auth0 redirects back to frontend with an authorization code
+4. Frontend exchanges the code with Auth0 directly for:
+      - access_token  (JWT, short-lived ~1 hour)
+      - refresh_token (long-lived, for obtaining new access tokens)
+      - id_token      (OIDC token with user profile claims)
+5. Frontend includes the access_token on every API request:
+      Authorization: Bearer <access_token>
+6. LiftIt Java backend validates the JWT:
+      - Verifies signature against Auth0's JWKS endpoint
+      - Validates issuer (iss) and audience (aud) claims
+      - Returns 401 Unauthorized if token is missing, invalid, or expired
+7. On token expiry, frontend calls Auth0 directly with the refresh_token to obtain a new access_token
+```
+
+### What the Backend Does (and Does Not Do)
+
+| Responsibility | Owner |
+|---|---|
+| Issuing access tokens | Auth0 |
+| Issuing refresh tokens | Auth0 |
+| Handling login UI | Auth0 Universal Login |
+| Token refresh | Frontend ↔ Auth0 directly |
+| Validating JWT on each request | LiftIt Java (Spring Security) |
+| Storing user profile (name, email, etc.) | LiftIt Java (`users` table) |
+| Storing credentials or passwords | Auth0 — never LiftIt |
+
+### Token Contract
+
+- **Transport**: `Authorization: Bearer <access_token>` HTTP header on every request
+- **Format**: JWT (signed RS256 by Auth0)
+- **Validation**: Spring Security verifies signature via Auth0 JWKS endpoint (`https://<tenant>.auth0.com/.well-known/jwks.json`)
+- **Claims checked**: `iss` (issuer), `aud` (audience), `exp` (expiry)
+- **No cookies, no server-side sessions** — fully stateless
+
+### Frontend Integration
+
+The frontend should use an Auth0 SDK appropriate for their stack:
+
+| Stack | SDK |
+|---|---|
+| React / Next.js | `@auth0/auth0-react` or `@auth0/nextjs-auth0` |
+| Vue | `@auth0/auth0-vue` |
+| Angular | `@auth0/auth0-angular` |
+| Vanilla JS / other | `@auth0/auth0-spa-js` |
+
+These SDKs handle the full OAuth2 PKCE flow, token storage, silent refresh, and attaching the Bearer token to outgoing requests automatically.
+
+### Security Rules
+
+- All endpoints require a valid JWT unless explicitly marked public
+- No endpoint issues, accepts, or stores passwords
+- JWT validation happens in Spring Security filter chain — controllers never see unauthenticated requests
+- Rate limiting applied to all auth-adjacent endpoints
 
 ---
 
