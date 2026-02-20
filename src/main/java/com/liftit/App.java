@@ -1,11 +1,12 @@
 package com.liftit;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
 public class App {
-    public static String greeting() {
-        return "LiftIt Java starter is running.";
-    }
 
     public static void main(String[] args) {
-        System.out.println(greeting());
+        SpringApplication.run(App.class, args);
     }
 }

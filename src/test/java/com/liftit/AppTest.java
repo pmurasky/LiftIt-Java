@@ -1,12 +1,20 @@
 package com.liftit;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class AppTest {
+
+    @Autowired
+    private ApplicationContext context;
+
     @Test
-    void greetingReturnsExpectedMessage() {
-        assertThat(App.greeting()).isEqualTo("LiftIt Java starter is running.");
+    void applicationContextLoads() {
+        assertThat(context).isNotNull();
     }
 }
