@@ -1,20 +1,17 @@
 package com.liftit;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 class AppTest {
 
-    @Autowired
-    private ApplicationContext context;
-
     @Test
-    void applicationContextLoads() {
-        assertThat(context).isNotNull();
+    void appClassExists() {
+        // Given / When
+        App app = new App();
+
+        // Then - confirms the main application class is instantiable (unit test, no Spring context)
+        assertThat(app).isNotNull();
     }
 }
