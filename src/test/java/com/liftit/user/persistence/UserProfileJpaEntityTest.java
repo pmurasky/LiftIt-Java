@@ -1,5 +1,6 @@
-package com.liftit.user;
+package com.liftit.user.persistence;
 
+import com.liftit.user.UserProfile;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

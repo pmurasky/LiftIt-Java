@@ -1,5 +1,7 @@
-package com.liftit.user;
+package com.liftit.user.persistence;
 
+import com.liftit.user.UserProfile;
+import com.liftit.user.UserProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

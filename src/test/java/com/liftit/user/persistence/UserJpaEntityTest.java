@@ -1,5 +1,8 @@
-package com.liftit.user;
+package com.liftit.user.persistence;
 
+import com.liftit.user.Auth0Id;
+import com.liftit.user.Email;
+import com.liftit.user.User;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

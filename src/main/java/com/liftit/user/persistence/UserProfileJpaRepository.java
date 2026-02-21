@@ -1,5 +1,6 @@
-package com.liftit.user;
+package com.liftit.user.persistence;
 
+import com.liftit.user.UserProfileRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

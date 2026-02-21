@@ -1,5 +1,7 @@
-package com.liftit.user;
+package com.liftit.user.persistence;
 
+import com.liftit.user.UserProfile;
+import com.liftit.user.UserProfileRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

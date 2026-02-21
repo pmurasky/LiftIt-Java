@@ -1,5 +1,8 @@
-package com.liftit.user;
+package com.liftit.user.persistence;
 
+import com.liftit.user.Auth0Id;
+import com.liftit.user.Email;
+import com.liftit.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,9 +18,6 @@ import java.time.Instant;
  * <p>Acts as the persistence layer representation of a {@link User} domain record.
  * Conversion to/from the domain model is provided by {@link #toDomain()} and
  * {@link #fromDomain(User)}.
- *
- * <p>This class is intentionally kept in the {@code user} package alongside the
- * domain model — it is an infrastructure detail of that domain, not a separate layer.
  */
 @Entity
 @Table(name = "users")
