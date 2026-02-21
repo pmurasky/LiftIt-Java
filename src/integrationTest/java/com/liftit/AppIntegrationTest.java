@@ -37,7 +37,7 @@ class AppIntegrationTest {
     @Test
     void flywayCreatesUsersTable() {
         // Given / When - Flyway runs automatically on startup
-        // Then - users table exists with expected columns
+        // Then - users table exists with the correct columns (Auth0-based schema, no password/username)
         List<String> columnNames = jdbcTemplate.queryForList(
                 "SELECT column_name FROM information_schema.columns " +
                 "WHERE table_schema = 'public' AND table_name = 'users' " +
@@ -45,6 +45,20 @@ class AppIntegrationTest {
                 String.class
         );
 
-        assertThat(columnNames).containsExactly("created_at", "email", "id", "password", "username");
+        assertThat(columnNames).containsExactly(
+                "auth0_id", "created_at", "created_by", "email", "id", "updated_at", "updated_by"
+        );
+    }
+
+    @Test
+    void flywaySeetsSystemAdminUser() {
+        // Given / When - Flyway seeds the system admin on startup
+        // Then - exactly one system admin row exists with id=1
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE id = 1 AND auth0_id = 'system'",
+                Integer.class
+        );
+
+        assertThat(count).isEqualTo(1);
     }
 }
