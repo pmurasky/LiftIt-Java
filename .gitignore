@@ -2,3 +2,15 @@
 build/
 out/
 *.class
+
+# Eclipse IDE
+.project
+.classpath
+.settings/
+bin/
+
+# IntelliJ IDEA
+.idea/
+
+# VS Code
+.vscode/
