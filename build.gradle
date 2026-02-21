@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.3'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'info.solidsoft.pitest' version '1.19.0-rc.3'
 }
 
 group = 'com.liftit'
@@ -60,3 +61,16 @@ tasks.register('integrationTest', Test) {
 }
 
 check.dependsOn integrationTest
+
+pitest {
+    pitestVersion = '1.22.0'
+    junit5PluginVersion = '1.2.3'
+    targetClasses = ['com.liftit.*']
+    targetTests = ['com.liftit.*']
+    excludedTestClasses = ['com.liftit.*IntegrationTest', 'com.liftit.*IT']
+    threads = 4
+    outputFormats = ['HTML']
+    mutationThreshold = 80
+    testSourceSets = [sourceSets.test]
+    reportDir = layout.buildDirectory.dir('reports/pitest')
+}
