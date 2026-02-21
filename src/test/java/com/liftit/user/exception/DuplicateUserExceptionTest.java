@@ -1,5 +1,7 @@
-package com.liftit.user;
+package com.liftit.user.exception;
 
+import com.liftit.user.Auth0Id;
+import com.liftit.user.Email;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,5 +1,8 @@
 package com.liftit.user;
 
+import com.liftit.user.exception.DuplicateProfileException;
+import com.liftit.user.exception.DuplicateUserException;
+import com.liftit.user.exception.UnauthorizedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

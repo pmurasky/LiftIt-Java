@@ -1,5 +1,6 @@
 package com.liftit.user;
 
+import com.liftit.user.exception.DuplicateProfileException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,6 +1,8 @@
 package com.liftit.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.liftit.user.exception.DuplicateProfileException;
+import com.liftit.user.exception.DuplicateUserException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;

@@ -1,4 +1,4 @@
-package com.liftit.user;
+package com.liftit.user.exception;
 
 /**
  * Thrown when an attempt is made to create a profile that conflicts with an

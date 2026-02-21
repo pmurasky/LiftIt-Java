@@ -1,4 +1,7 @@
-package com.liftit.user;
+package com.liftit.user.exception;
+
+import com.liftit.user.Auth0Id;
+import com.liftit.user.Email;
 
 /**
  * Thrown when an attempt is made to provision a user that already exists,

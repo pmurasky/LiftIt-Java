@@ -1,4 +1,4 @@
-package com.liftit.user;
+package com.liftit.user.exception;
 
 /**
  * Thrown when a request cannot be authenticated — either the identity

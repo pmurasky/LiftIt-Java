@@ -1,5 +1,6 @@
 package com.liftit.user;
 
+import com.liftit.user.exception.DuplicateProfileException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
