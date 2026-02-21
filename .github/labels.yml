@@ -71,11 +71,11 @@
 
 # Area Labels
 - name: build
-  color: 5319e7
+  color: "5319e7"
   description: Build system and Gradle configuration
 
 - name: ci-cd
-  color: 5319e7
+  color: "5319e7"
   description: Continuous integration and deployment
 
 - name: testing
