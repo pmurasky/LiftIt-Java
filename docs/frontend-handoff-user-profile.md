@@ -53,15 +53,7 @@ Call this once on first login to register the user in the backend database.
 
 ---
 
-## What Is NOT Yet Live (Coming Soon)
-
-The `user_profiles` table and domain model exist in the backend but **there is no
-API endpoint yet**. The frontend cannot create or fetch a profile until the next
-issue is complete.
-
-When built, the endpoints will be:
-
----
+## What Is Live Today (continued)
 
 ### Create Profile
 `POST /api/v1/users/me/profile`
@@ -103,8 +95,6 @@ When built, the endpoints will be:
   "createdAt": "2026-02-21T12:00:00Z"
 }
 ```
-
----
 
 ### Get Profile
 `GET /api/v1/users/me/profile`
@@ -151,6 +141,24 @@ Returns the profile for the authenticated user.
       - 400 → validation error, show field errors
       - 409 → username taken, prompt for a different one
 ```
+
+---
+
+## Temporary Authentication Header (Profile Endpoints Only)
+
+> **This is a development stub — it will be removed when JWT middleware is implemented (epic #14).**
+
+Until Spring Security JWT validation is wired, profile endpoints identify the caller via:
+
+```
+X-Auth0-Id: auth0|abc123
+```
+
+This header must contain the Auth0 `sub` claim. If absent or if the value does not match a
+provisioned user, the backend returns `401 Unauthorized`.
+
+**The final production flow will use the standard Bearer token only** — the `X-Auth0-Id`
+header is a temporary bridge and should not be treated as a permanent API contract.
 
 ---
 
