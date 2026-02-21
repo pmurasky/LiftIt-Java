@@ -1,12 +1,12 @@
 package com.liftit.user;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -14,12 +14,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.Instant;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -28,12 +22,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration test for the user profile API endpoints.
  *
- * <p>Boots the full Spring context with a real Postgres via Testcontainers.
- * {@link UserRepository} and {@link UserProfileRepository} are mocked because
- * their JPA implementations do not exist yet — that will be addressed when
- * the JPA repository issue is resolved. This test verifies that the controller,
- * service, and Spring MVC wiring are correctly integrated end-to-end through
- * the real application context.
+ * <p>Boots the full Spring context with a real Postgres via Testcontainers and
+ * exercises the complete HTTP → controller → service → JPA → database stack.
+ * Uses real JPA repositories — no mocks.
+ *
+ * <p>Each test provisions a fresh user row via the provisioning service and
+ * cleans up all non-system rows in {@code @AfterEach} to maintain test isolation.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @Testcontainers
@@ -47,40 +41,38 @@ class UserProfileIntegrationTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
 
-    @MockitoBean
-    private UserRepository userRepository;
+    @Autowired
+    private UserJpaRepository userJpaRepository;
 
-    @MockitoBean
-    private UserProfileRepository userProfileRepository;
+    @Autowired
+    private UserProfileJpaRepository userProfileJpaRepository;
+
+    @Autowired
+    private UserProvisioningService userProvisioningService;
 
     private MockMvc mockMvc;
 
     private static final String AUTH0_ID = "auth0|integrationprofileuser";
-    private static final Long USER_ID = 100L;
-    private static final Long PROFILE_ID = 1L;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        userProvisioningService.provision(Auth0Id.of(AUTH0_ID), Email.of("profiletest@example.com"));
+    }
 
-        Auth0Id auth0Id = Auth0Id.of(AUTH0_ID);
-        User user = new User(USER_ID, auth0Id, Email.of("profiletest@example.com"),
-                Instant.now(), 1L, Instant.now(), 1L);
-        when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
+    @AfterEach
+    void tearDown() {
+        userProfileJpaRepository.deleteAll(userProfileJpaRepository.findAll());
+        userJpaRepository.deleteAll(
+                userJpaRepository.findAll().stream()
+                        .filter(e -> e.toDomain().id() > 99)
+                        .toList()
+        );
     }
 
     @Test
     void shouldCreateProfileViaEndpointAndReturn201() throws Exception {
         // Given
-        UserProfile savedProfile = new UserProfile(
-                PROFILE_ID, USER_ID, "integration_user", "Integration User",
-                "prefer_not_to_say", null, 175.0, "metric",
-                Instant.now(), 1L, Instant.now(), 1L
-        );
-        when(userProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
-        when(userProfileRepository.findByUsername("integration_user")).thenReturn(Optional.empty());
-        when(userProfileRepository.save(any(UserProfile.class))).thenReturn(savedProfile);
-
         String requestBody = """
                 {
                   "username": "integration_user",
@@ -97,36 +89,39 @@ class UserProfileIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(PROFILE_ID))
-                .andExpect(jsonPath("$.userId").value(USER_ID))
                 .andExpect(jsonPath("$.username").value("integration_user"))
                 .andExpect(jsonPath("$.displayName").value("Integration User"))
-                .andExpect(jsonPath("$.unitsPreference").value("metric"));
+                .andExpect(jsonPath("$.unitsPreference").value("metric"))
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.userId").isNumber());
     }
 
     @Test
     void shouldReturnProfileViaGetEndpointWhenProfileExists() throws Exception {
-        // Given
-        UserProfile profile = new UserProfile(
-                PROFILE_ID, USER_ID, "integration_user", null, null, null, null, "imperial",
-                Instant.now(), 1L, Instant.now(), 1L
-        );
-        when(userProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(profile));
+        // Given — create the profile first
+        String requestBody = """
+                {
+                  "username": "get_user",
+                  "unitsPreference": "imperial"
+                }
+                """;
+        mockMvc.perform(post("/api/v1/users/me/profile")
+                        .header("X-Auth0-Id", AUTH0_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isCreated());
 
         // When / Then
         mockMvc.perform(get("/api/v1/users/me/profile")
                         .header("X-Auth0-Id", AUTH0_ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(PROFILE_ID))
-                .andExpect(jsonPath("$.userId").value(USER_ID))
-                .andExpect(jsonPath("$.username").value("integration_user"))
+                .andExpect(jsonPath("$.username").value("get_user"))
                 .andExpect(jsonPath("$.unitsPreference").value("imperial"));
     }
 
     @Test
     void shouldReturn404ViaGetEndpointWhenNoProfileExists() throws Exception {
-        // Given
-        when(userProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+        // Given — no profile created for the user
 
         // When / Then
         mockMvc.perform(get("/api/v1/users/me/profile")
@@ -136,25 +131,32 @@ class UserProfileIntegrationTest {
 
     @Test
     void shouldReturn409ViaEndpointWhenUserAlreadyHasProfile() throws Exception {
-        // Given
-        UserProfile existingProfile = new UserProfile(
-                PROFILE_ID, USER_ID, "existing_user", null, null, null, null, "metric",
-                Instant.now(), 1L, Instant.now(), 1L
-        );
-        when(userProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(existingProfile));
-
-        String requestBody = """
+        // Given — create the profile once
+        String firstRequest = """
                 {
-                  "username": "another_name",
+                  "username": "first_profile",
+                  "unitsPreference": "metric"
+                }
+                """;
+        mockMvc.perform(post("/api/v1/users/me/profile")
+                        .header("X-Auth0-Id", AUTH0_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(firstRequest))
+                .andExpect(status().isCreated());
+
+        // When — try to create a second profile
+        String secondRequest = """
+                {
+                  "username": "second_profile",
                   "unitsPreference": "metric"
                 }
                 """;
 
-        // When / Then
+        // Then
         mockMvc.perform(post("/api/v1/users/me/profile")
                         .header("X-Auth0-Id", AUTH0_ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(secondRequest))
                 .andExpect(status().isConflict());
     }
 

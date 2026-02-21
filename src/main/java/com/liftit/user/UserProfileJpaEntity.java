@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -40,8 +41,8 @@ class UserProfileJpaEntity {
     @Column(name = "birthdate")
     private LocalDate birthdate;
 
-    @Column(name = "height_cm")
-    private Double heightCm;
+    @Column(name = "height_cm", precision = 5, scale = 1)
+    private BigDecimal heightCm;
 
     @Column(name = "units_preference", nullable = false, length = 10)
     private String unitsPreference;
@@ -86,7 +87,7 @@ class UserProfileJpaEntity {
         this.displayName = displayName;
         this.gender = gender;
         this.birthdate = birthdate;
-        this.heightCm = heightCm;
+        this.heightCm = heightCm == null ? null : BigDecimal.valueOf(heightCm);
         this.unitsPreference = unitsPreference;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
@@ -100,8 +101,9 @@ class UserProfileJpaEntity {
      * @return a fully populated {@link UserProfile}
      */
     UserProfile toDomain() {
+        Double heightCmDouble = heightCm == null ? null : heightCm.doubleValue();
         return new UserProfile(id, userId, username, displayName, gender, birthdate,
-                heightCm, unitsPreference, createdAt, createdBy, updatedAt, updatedBy);
+                heightCmDouble, unitsPreference, createdAt, createdBy, updatedAt, updatedBy);
     }
 
     /**

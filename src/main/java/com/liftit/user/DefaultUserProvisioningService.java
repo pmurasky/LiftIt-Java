@@ -1,5 +1,7 @@
 package com.liftit.user;
 
+import org.springframework.stereotype.Service;
+
 import java.time.Instant;
 
 /**
@@ -13,6 +15,7 @@ import java.time.Instant;
  * and {@code updated_by} on first insert, as required by the architecture.
  * The database assigns the real {@code BIGINT IDENTITY} primary key.
  */
+@Service
 public class DefaultUserProvisioningService implements UserProvisioningService {
 
     private static final long SYSTEM_ADMIN_ID = 1L;

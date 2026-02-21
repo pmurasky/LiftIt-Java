@@ -1,13 +1,12 @@
 package com.liftit.user;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -15,22 +14,16 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.Instant;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Integration test for the user provisioning flow.
  *
- * <p>Boots the full Spring context with a real Postgres via Testcontainers.
- * The {@link UserRepository} is mocked because the JPA implementation
- * does not exist yet — that will be addressed in the repository issue.
- * This test verifies that the controller, service, and Spring MVC wiring
- * are correctly integrated end-to-end through the real application context.
+ * <p>Boots the full Spring context with a real Postgres via Testcontainers and
+ * exercises the complete HTTP → controller → service → JPA → database stack.
+ * Uses real JPA repositories — no mocks.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @Testcontainers
@@ -45,10 +38,7 @@ class UserProvisioningIntegrationTest {
     private WebApplicationContext webApplicationContext;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
-    private UserRepository userRepository;
+    private UserJpaRepository userJpaRepository;
 
     private MockMvc mockMvc;
 
@@ -57,44 +47,48 @@ class UserProvisioningIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
 
-    @Test
-    void shouldProvisionUserViaEndpointAndReturnCreated() throws Exception {
-        // Given
-        Auth0Id auth0Id = Auth0Id.of("auth0|integrationuser");
-        Email email = Email.of("integration@example.com");
-        User savedUser = new User(100L, auth0Id, email, Instant.now(), 1L, Instant.now(), 1L);
-
-        when(userRepository.findByAuth0Id(any(Auth0Id.class))).thenReturn(Optional.empty());
-        when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
-
-        ProvisionUserRequest request = new ProvisionUserRequest("auth0|integrationuser", "integration@example.com");
-
-        // When / Then
-        mockMvc.perform(post("/api/v1/users/me")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(100))
-                .andExpect(jsonPath("$.auth0Id").value("auth0|integrationuser"))
-                .andExpect(jsonPath("$.email").value("integration@example.com"));
+    @AfterEach
+    void tearDown() {
+        userJpaRepository.deleteAll(
+                userJpaRepository.findAll().stream()
+                        .filter(e -> e.toDomain().id() > 99)
+                        .toList()
+        );
     }
 
     @Test
-    void shouldReturn409WhenUserAlreadyExistsViaEndpoint() throws Exception {
+    void shouldProvisionUserViaEndpointAndReturnCreated() throws Exception {
         // Given
-        Auth0Id auth0Id = Auth0Id.of("auth0|existing");
-        Email email = Email.of("existing@example.com");
-        User existingUser = new User(50L, auth0Id, email, Instant.now(), 1L, Instant.now(), 1L);
-
-        when(userRepository.findByAuth0Id(any(Auth0Id.class))).thenReturn(Optional.of(existingUser));
-
-        ProvisionUserRequest request = new ProvisionUserRequest("auth0|existing", "existing@example.com");
+        String body = """
+                {"auth0Id": "auth0|integrationuser", "email": "integration@example.com"}
+                """;
 
         // When / Then
         mockMvc.perform(post("/api/v1/users/me")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.auth0Id").value("auth0|integrationuser"))
+                .andExpect(jsonPath("$.email").value("integration@example.com"))
+                .andExpect(jsonPath("$.id").isNumber());
+    }
+
+    @Test
+    void shouldReturn409WhenUserAlreadyExists() throws Exception {
+        // Given — provision the user once
+        String body = """
+                {"auth0Id": "auth0|existing", "email": "existing@example.com"}
+                """;
+        mockMvc.perform(post("/api/v1/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated());
+
+        // When — provision again with the same auth0Id
+        // Then
+        mockMvc.perform(post("/api/v1/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andExpect(status().isConflict());
     }
 }
