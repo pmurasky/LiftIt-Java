@@ -24,8 +24,54 @@
 
 ### Migration
 - Liquibase
-- YAML changelogs
+- SQL format changelogs (`.sql` files with `--liquibase formatted sql` header)
 - Liquibase runs automatically on application startup in all environments
+
+### Liquibase Rules (Non-Negotiable)
+
+#### Never modify an applied changeset
+Once a changeset has been applied, Liquibase stores its checksum in the `DATABASECHANGELOG`
+table. If you modify the changeset SQL, Liquibase will detect the checksum mismatch and
+**fail to start** in any environment where it previously ran. This is true even for whitespace
+or comment changes.
+
+**Rule: Applied changesets are immutable. Always write a new changeset to amend.**
+
+#### Changeset granularity
+One changeset = one logical unit of work. Do not split a single logical change into many
+one-statement changesets, and do not bundle unrelated changes into one changeset.
+
+**Examples:**
+- ✅ One changeset to fix all columns on a single table (one logical correction)
+- ✅ One changeset to create a new table (one logical addition)
+- ❌ One changeset per `ALTER TABLE` statement (too granular — over-engineering)
+- ❌ One changeset that creates three unrelated tables (too broad — hard to roll back)
+
+#### Changelog file format
+Use SQL format. Each file must begin with:
+```sql
+--liquibase formatted sql
+```
+Each changeset block begins with:
+```sql
+--changeset author:id
+```
+The `id` must be unique within the file. Convention: use a short descriptive slug
+(e.g. `liftit:create-users-table`), not a bare integer.
+
+#### Rollback
+Every changeset should include a `--rollback` comment documenting the inverse operation.
+For complex changes (e.g. column type changes with data), note that rollback may require
+manual intervention.
+
+#### File naming convention
+```
+V{version}__{description}.sql
+```
+- Version is an integer, incrementing from 1
+- Description uses underscores, lowercase
+- Double underscore separates version from description
+- Examples: `V1__create_users_table.sql`, `V2__fix_users_table.sql`
 
 ### Naming Conventions
 - snake_case
