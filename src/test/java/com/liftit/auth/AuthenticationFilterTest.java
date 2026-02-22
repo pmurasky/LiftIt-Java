@@ -10,10 +10,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -151,6 +154,45 @@ class AuthenticationFilterTest {
 
         // Then
         verify(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+        verify(chain, never()).doFilter(any(), any());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "POST, /api/v1/users/me",
+        "POST, /api/auth/login",
+        "POST, /api/auth/register",
+        "POST, /api/auth/refresh"
+    })
+    void shouldPassThroughPublicEndpointsWithoutCheckingToken(String method, String uri)
+            throws ServletException, IOException {
+        // Given — no Authorization header on a public route
+        when(request.getMethod()).thenReturn(method);
+        when(request.getRequestURI()).thenReturn(uri);
+        when(request.getHeader("Authorization")).thenReturn(null);
+
+        // When
+        filter.doFilter(request, response, chain);
+
+        // Then — chain proceeds without any auth check or 401
+        verify(chain).doFilter(request, response);
+        verify(authService, never()).authenticate(any());
+        verify(response, never()).sendError(anyInt(), anyString());
+    }
+
+    @Test
+    void shouldRequireTokenForProtectedEndpoints() throws ServletException, IOException {
+        // Given — no Authorization header on a protected route
+        when(request.getMethod()).thenReturn("GET");
+        when(request.getRequestURI()).thenReturn("/api/v1/users/me/profile");
+        when(request.getHeader("Authorization")).thenReturn(null);
+        when(extractor.extract(null)).thenReturn(java.util.Optional.empty());
+
+        // When
+        filter.doFilter(request, response, chain);
+
+        // Then — 401 returned, chain not invoked
+        verify(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
         verify(chain, never()).doFilter(any(), any());
     }
 }

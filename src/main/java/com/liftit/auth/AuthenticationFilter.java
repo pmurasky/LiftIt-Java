@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -13,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Servlet filter that authenticates incoming requests via JWT bearer tokens.
@@ -20,6 +22,9 @@ import java.util.Optional;
  * <p>Intercepts every request once per dispatch. Extracts the bearer token from
  * the {@code Authorization} header, validates it using {@link AuthenticationService},
  * and populates the {@link SecurityContextHolder} on success.
+ *
+ * <p>Public endpoints (registration, login, token refresh, user provisioning) are
+ * excluded from token validation via {@link #shouldNotFilter}.
  *
  * <p>Returns {@code 401 Unauthorized} immediately for missing or invalid tokens
  * without invoking downstream filters.
@@ -29,6 +34,13 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String MISSING_HEADER_MSG = "Missing or invalid Authorization header";
     private static final String INVALID_TOKEN_MSG = "Invalid or expired token";
+
+    private static final Set<String> PUBLIC_URIS = Set.of(
+            "/api/v1/users/me",
+            "/api/auth/login",
+            "/api/auth/register",
+            "/api/auth/refresh"
+    );
 
     private final AuthenticationService authenticationService;
     private final BearerTokenExtractor tokenExtractor;
@@ -42,6 +54,18 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             BearerTokenExtractor tokenExtractor) {
         this.authenticationService = authenticationService;
         this.tokenExtractor = tokenExtractor;
+    }
+
+    /**
+     * Skips token validation for public endpoints that do not require authentication.
+     *
+     * <p>Only {@code POST} requests to the provisioning and auth endpoints are public;
+     * all other methods on those paths still require a valid token.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return HttpMethod.POST.matches(request.getMethod())
+                && PUBLIC_URIS.contains(request.getRequestURI());
     }
 
     @Override
