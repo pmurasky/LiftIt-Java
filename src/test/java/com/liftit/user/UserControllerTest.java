@@ -3,14 +3,18 @@ package com.liftit.user;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.liftit.user.exception.DuplicateProfileException;
 import com.liftit.user.exception.DuplicateUserException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -38,6 +42,16 @@ class UserControllerTest {
                 userProvisioningService, userProfileService, userRepository
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticateAs(String auth0Id) {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(auth0Id, null, List.of()));
     }
 
     // --- POST /api/v1/users/me (existing provisioning tests) ---
@@ -104,6 +118,7 @@ class UserControllerTest {
     @Test
     void shouldReturn201WithProfileResponseOnSuccessfulProfileCreation() throws Exception {
         // Given
+        authenticateAs("auth0|abc123");
         Auth0Id auth0Id = Auth0Id.of("auth0|abc123");
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
@@ -129,7 +144,6 @@ class UserControllerTest {
 
         // When / Then
         mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", "auth0|abc123")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
@@ -143,6 +157,7 @@ class UserControllerTest {
     @Test
     void shouldReturn409WhenUserAlreadyHasProfile() throws Exception {
         // Given
+        authenticateAs("auth0|abc123");
         Auth0Id auth0Id = Auth0Id.of("auth0|abc123");
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
@@ -155,7 +170,6 @@ class UserControllerTest {
 
         // When / Then
         mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", "auth0|abc123")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
@@ -164,6 +178,7 @@ class UserControllerTest {
     @Test
     void shouldReturn409WhenUsernameAlreadyTaken() throws Exception {
         // Given
+        authenticateAs("auth0|abc123");
         Auth0Id auth0Id = Auth0Id.of("auth0|abc123");
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
@@ -176,7 +191,6 @@ class UserControllerTest {
 
         // When / Then
         mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", "auth0|abc123")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
@@ -185,6 +199,7 @@ class UserControllerTest {
     @Test
     void shouldReturn400WhenUsernameIsMissingOnProfileCreation() throws Exception {
         // Given
+        authenticateAs("auth0|abc123");
         Auth0Id auth0Id = Auth0Id.of("auth0|abc123");
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
@@ -197,15 +212,14 @@ class UserControllerTest {
 
         // When / Then
         mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", "auth0|abc123")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void shouldReturn401WhenAuth0IdHeaderIsMissingOnProfileCreation() throws Exception {
-        // Given — no X-Auth0-Id header supplied
+    void shouldReturn401WhenNoAuthenticationOnProfileCreation() throws Exception {
+        // Given — no authentication in security context
         CreateUserProfileRequest request = new CreateUserProfileRequest(
                 "alice_lifts", null, null, null, null, "metric"
         );
@@ -218,8 +232,9 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturn401WhenUserNotFoundForAuth0IdOnProfileCreation() throws Exception {
-        // Given — valid header but no matching user row
+    void shouldReturn401WhenUserNotFoundForPrincipalOnProfileCreation() throws Exception {
+        // Given — authenticated but no matching user row
+        authenticateAs("auth0|unknown");
         when(userRepository.findByAuth0Id(any(Auth0Id.class))).thenReturn(Optional.empty());
         CreateUserProfileRequest request = new CreateUserProfileRequest(
                 "ghost_user", null, null, null, null, "metric"
@@ -227,7 +242,6 @@ class UserControllerTest {
 
         // When / Then
         mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", "auth0|unknown")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
@@ -238,6 +252,7 @@ class UserControllerTest {
     @Test
     void shouldReturn200WithProfileResponseWhenProfileExists() throws Exception {
         // Given
+        authenticateAs("auth0|abc123");
         Auth0Id auth0Id = Auth0Id.of("auth0|abc123");
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
@@ -250,8 +265,7 @@ class UserControllerTest {
         when(userProfileService.getProfile(100L)).thenReturn(Optional.of(profile));
 
         // When / Then
-        mockMvc.perform(get("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", "auth0|abc123"))
+        mockMvc.perform(get("/api/v1/users/me/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.userId").value(100))
@@ -261,6 +275,7 @@ class UserControllerTest {
     @Test
     void shouldReturn404WhenNoProfileExistsForUser() throws Exception {
         // Given
+        authenticateAs("auth0|abc123");
         Auth0Id auth0Id = Auth0Id.of("auth0|abc123");
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
@@ -268,26 +283,25 @@ class UserControllerTest {
         when(userProfileService.getProfile(100L)).thenReturn(Optional.empty());
 
         // When / Then
-        mockMvc.perform(get("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", "auth0|abc123"))
+        mockMvc.perform(get("/api/v1/users/me/profile"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void shouldReturn401WhenAuth0IdHeaderIsMissingOnGetProfile() throws Exception {
-        // Given — no X-Auth0-Id header
+    void shouldReturn401WhenNoAuthenticationOnGetProfile() throws Exception {
+        // Given — no authentication in security context
         mockMvc.perform(get("/api/v1/users/me/profile"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void shouldReturn401WhenUserNotFoundForAuth0IdOnGetProfile() throws Exception {
-        // Given — valid header but no matching user row
+    void shouldReturn401WhenUserNotFoundForPrincipalOnGetProfile() throws Exception {
+        // Given — authenticated but no matching user row
+        authenticateAs("auth0|unknown");
         when(userRepository.findByAuth0Id(any(Auth0Id.class))).thenReturn(Optional.empty());
 
         // When / Then
-        mockMvc.perform(get("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", "auth0|unknown"))
+        mockMvc.perform(get("/api/v1/users/me/profile"))
                 .andExpect(status().isUnauthorized());
     }
 }

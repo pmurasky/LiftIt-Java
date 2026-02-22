@@ -5,28 +5,24 @@ import com.liftit.user.exception.DuplicateUserException;
 import com.liftit.user.exception.UnauthorizedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for user provisioning and profile management.
  *
- * <h3>Security note — X-Auth0-Id header</h3>
- * <p>Profile endpoints currently identify the caller via the {@code X-Auth0-Id} request
- * header. This is an <strong>explicit temporary stub</strong> that will be replaced when
- * the Auth0 JWT resource-server filter (epic #14) is implemented. At that point the
- * controller will extract the {@code sub} claim from
- * {@code SecurityContextHolder.getContext().getAuthentication()}, and this header will be
- * removed. The stub is intentionally named and documented so it is never mistaken for a
- * production authentication mechanism.
- *
- * <p>User identity is <em>never</em> accepted from the request body — callers cannot
- * supply their own {@code userId} (IDOR prevention).
+ * <h3>Identity resolution</h3>
+ * <p>Profile endpoints identify the caller from the JWT {@code sub} claim, which the
+ * {@link com.liftit.auth.AuthenticationFilter} extracts and stores as the principal in
+ * {@link SecurityContextHolder}. User identity is <em>never</em> accepted from request
+ * headers or the request body — callers cannot supply their own {@code userId}
+ * (IDOR prevention).
  */
 @RestController
 @RequestMapping("/api/v1/users")
@@ -69,18 +65,17 @@ public class UserController {
      * Creates a lifting profile for the authenticated user.
      *
      * <p>Each user may have at most one profile. A second call returns {@code 409 Conflict}.
-     * The caller is identified via the {@code X-Auth0-Id} header (temporary stub —
-     * see class-level Javadoc).
+     * The caller is identified from the JWT {@code sub} claim in the
+     * {@link SecurityContextHolder}, placed there by
+     * {@link com.liftit.auth.AuthenticationFilter}.
      *
-     * @param auth0IdHeader the Auth0 subject identifier (temporary stub for JWT sub claim)
-     * @param request       the profile fields supplied during onboarding
+     * @param request the profile fields supplied during onboarding
      * @return {@code 201 Created} with the created profile, or an error status
      */
     @PostMapping("/me/profile")
     public ResponseEntity<UserProfileResponse> createProfile(
-            @RequestHeader(value = "X-Auth0-Id", required = false) String auth0IdHeader,
             @RequestBody CreateUserProfileRequest request) {
-        Long userId = resolveUserId(auth0IdHeader);
+        Long userId = resolveUserId();
         UserProfile profile = userProfileService.createProfile(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserProfileResponse.from(profile));
     }
@@ -88,16 +83,15 @@ public class UserController {
     /**
      * Returns the lifting profile for the authenticated user.
      *
-     * <p>The caller is identified via the {@code X-Auth0-Id} header (temporary stub —
-     * see class-level Javadoc).
+     * <p>The caller is identified from the JWT {@code sub} claim in the
+     * {@link SecurityContextHolder}, placed there by
+     * {@link com.liftit.auth.AuthenticationFilter}.
      *
-     * @param auth0IdHeader the Auth0 subject identifier (temporary stub for JWT sub claim)
      * @return {@code 200 OK} with the profile, or {@code 404 Not Found} if no profile exists
      */
     @GetMapping("/me/profile")
-    public ResponseEntity<UserProfileResponse> getProfile(
-            @RequestHeader(value = "X-Auth0-Id", required = false) String auth0IdHeader) {
-        Long userId = resolveUserId(auth0IdHeader);
+    public ResponseEntity<UserProfileResponse> getProfile() {
+        Long userId = resolveUserId();
         return userProfileService.getProfile(userId)
                 .map(UserProfileResponse::from)
                 .map(ResponseEntity::ok)
@@ -125,17 +119,19 @@ public class UserController {
     }
 
     /**
-     * Resolves the internal userId from the temporary auth header stub.
+     * Resolves the internal userId from the JWT principal stored in the security context.
      *
-     * <p>Returns {@code 401 Unauthorized} if the header is absent or the auth0Id
-     * is not found in the users table. This will be replaced by JWT principal
-     * extraction when epic #14 is implemented.
+     * <p>The {@link com.liftit.auth.AuthenticationFilter} places the Auth0 subject
+     * string as the authentication principal before this controller is invoked.
+     * Returns {@code 401 Unauthorized} if no authentication is present or the
+     * auth0Id is not found in the users table.
      */
-    private Long resolveUserId(String auth0IdHeader) {
-        if (auth0IdHeader == null || auth0IdHeader.isBlank()) {
+    private Long resolveUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
             throw new UnauthorizedException();
         }
-        return userRepository.findByAuth0Id(Auth0Id.of(auth0IdHeader))
+        return userRepository.findByAuth0Id(Auth0Id.of(authentication.getName()))
                 .map(User::id)
                 .orElseThrow(UnauthorizedException::new);
     }
