@@ -41,9 +41,12 @@ public class SecurityConfig {
     /**
      * Configures the security filter chain.
      *
-     * <p>Public endpoints:
+     * <p>Public endpoints (no token required):
      * <ul>
      *   <li>{@code POST /api/v1/users/me} — user provisioning (bootstrap after first Auth0 login)
+     *   <li>{@code POST /api/auth/login} — obtain a token
+     *   <li>{@code POST /api/auth/register} — create an account
+     *   <li>{@code POST /api/auth/refresh} — exchange a refresh token for new access token
      * </ul>
      * All other {@code /api/**} routes require a valid JWT bearer token.
      */
@@ -54,7 +57,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/me").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/users/me",
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/auth/refresh").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
