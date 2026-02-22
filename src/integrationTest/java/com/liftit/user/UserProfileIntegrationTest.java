@@ -1,5 +1,6 @@
 package com.liftit.user;
 
+import com.liftit.auth.JwtTestTokenFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,8 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -20,6 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 /**
  * Integration test for the user profile API endpoints.
@@ -54,9 +58,16 @@ class UserProfileIntegrationTest {
 
     private static final String AUTH0_ID = "auth0|integrationprofileuser";
 
+    @DynamicPropertySource
+    static void registerJwtPublicKey(DynamicPropertyRegistry registry) {
+        registry.add("security.jwt.public-key", JwtTestTokenFactory::publicKeyPem);
+    }
+
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
         userProvisioningService.provision(Auth0Id.of(AUTH0_ID), Email.of("profiletest@example.com"));
     }
 
@@ -81,7 +92,7 @@ class UserProfileIntegrationTest {
 
         // When / Then
         mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", AUTH0_ID)
+                        .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
@@ -102,14 +113,14 @@ class UserProfileIntegrationTest {
                 }
                 """;
         mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", AUTH0_ID)
+                        .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated());
 
         // When / Then
         mockMvc.perform(get("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", AUTH0_ID))
+                        .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("get_user"))
                 .andExpect(jsonPath("$.unitsPreference").value("imperial"));
@@ -121,7 +132,7 @@ class UserProfileIntegrationTest {
 
         // When / Then
         mockMvc.perform(get("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", AUTH0_ID))
+                        .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID)))
                 .andExpect(status().isNotFound());
     }
 
@@ -135,7 +146,7 @@ class UserProfileIntegrationTest {
                 }
                 """;
         mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", AUTH0_ID)
+                        .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(firstRequest))
                 .andExpect(status().isCreated());
@@ -150,15 +161,15 @@ class UserProfileIntegrationTest {
 
         // Then
         mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("X-Auth0-Id", AUTH0_ID)
+                        .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(secondRequest))
                 .andExpect(status().isConflict());
     }
 
     @Test
-    void shouldReturn401ViaEndpointWhenAuth0IdHeaderIsMissing() throws Exception {
-        // Given — no X-Auth0-Id header
+    void shouldReturn401ViaEndpointWhenAuthorizationHeaderIsMissing() throws Exception {
+        // Given — no Authorization header
         String requestBody = """
                 {
                   "username": "ghost_user",
