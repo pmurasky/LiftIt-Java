@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -27,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @Testcontainers
+@ActiveProfiles("integrationTest")
 class UserProvisioningIntegrationTest {
 
     @Container
@@ -38,7 +41,7 @@ class UserProvisioningIntegrationTest {
     private WebApplicationContext webApplicationContext;
 
     @Autowired
-    private UserJpaRepository userJpaRepository;
+    private JdbcTemplate jdbcTemplate;
 
     private MockMvc mockMvc;
 
@@ -49,11 +52,7 @@ class UserProvisioningIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        userJpaRepository.deleteAll(
-                userJpaRepository.findAll().stream()
-                        .filter(e -> e.toDomain().id() > 99)
-                        .toList()
-        );
+        jdbcTemplate.update("DELETE FROM users WHERE id > 99");
     }
 
     @Test

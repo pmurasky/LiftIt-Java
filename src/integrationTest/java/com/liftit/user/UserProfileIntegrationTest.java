@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -31,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @Testcontainers
+@ActiveProfiles("integrationTest")
 class UserProfileIntegrationTest {
 
     @Container
@@ -42,10 +45,7 @@ class UserProfileIntegrationTest {
     private WebApplicationContext webApplicationContext;
 
     @Autowired
-    private UserJpaRepository userJpaRepository;
-
-    @Autowired
-    private UserProfileJpaRepository userProfileJpaRepository;
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private UserProvisioningService userProvisioningService;
@@ -62,12 +62,8 @@ class UserProfileIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        userProfileJpaRepository.deleteAll(userProfileJpaRepository.findAll());
-        userJpaRepository.deleteAll(
-                userJpaRepository.findAll().stream()
-                        .filter(e -> e.toDomain().id() > 99)
-                        .toList()
-        );
+        jdbcTemplate.update("DELETE FROM user_profiles");
+        jdbcTemplate.update("DELETE FROM users WHERE id > 99");
     }
 
     @Test
