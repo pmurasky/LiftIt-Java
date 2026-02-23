@@ -1,5 +1,8 @@
 package com.liftit.user;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * Request body for {@code POST /api/v1/users/me}.
  *
@@ -10,5 +13,8 @@ package com.liftit.user;
  * @param auth0Id the Auth0 subject identifier ({@code sub} claim); must not be blank
  * @param email   the user's email address ({@code email} claim); must not be blank
  */
-public record ProvisionUserRequest(String auth0Id, String email) {
+public record ProvisionUserRequest(
+        @NotBlank(message = "auth0Id must not be blank") String auth0Id,
+        @NotBlank(message = "email must not be blank") @Email(message = "email must be valid") String email
+) {
 }

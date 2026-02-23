@@ -1,5 +1,10 @@
 package com.liftit.user;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 import java.time.LocalDate;
 
 /**
@@ -18,11 +23,28 @@ import java.time.LocalDate;
  * @param unitsPreference required; {@code metric} or {@code imperial}
  */
 public record CreateUserProfileRequest(
+        @NotBlank(message = "username must not be blank")
+        @Size(max = 30, message = "username must be 30 characters or fewer")
         String username,
+
+        @Size(max = 100, message = "displayName must be 100 characters or fewer")
         String displayName,
+
+        @Pattern(
+                regexp = "^(male|female|non_binary|prefer_not_to_say)?$",
+                message = "gender must be one of: male, female, non_binary, prefer_not_to_say"
+        )
         String gender,
+
         LocalDate birthdate,
+
         Double heightCm,
+
+        @NotNull(message = "unitsPreference must not be null")
+        @Pattern(
+                regexp = "^(metric|imperial)$",
+                message = "unitsPreference must be metric or imperial"
+        )
         String unitsPreference
 ) {
 }

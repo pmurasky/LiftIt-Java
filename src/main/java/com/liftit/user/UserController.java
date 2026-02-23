@@ -1,6 +1,7 @@
 package com.liftit.user;
 
 import com.liftit.user.exception.UnauthorizedException;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -49,8 +50,7 @@ public class UserController {
      * @return {@code 201 Created} with the provisioned user, or an error status
      */
     @PostMapping("/me")
-    public ResponseEntity<UserResponse> provisionUser(@RequestBody ProvisionUserRequest request) {
-        validateProvisionRequest(request);
+    public ResponseEntity<UserResponse> provisionUser(@Valid @RequestBody ProvisionUserRequest request) {
         User user = userProvisioningService.provision(
                 Auth0Id.of(request.auth0Id()),
                 Email.of(request.email())
@@ -71,7 +71,7 @@ public class UserController {
      */
     @PostMapping("/me/profile")
     public ResponseEntity<UserProfileResponse> createProfile(
-            @RequestBody CreateUserProfileRequest request) {
+            @Valid @RequestBody CreateUserProfileRequest request) {
         Long userId = resolveUserId();
         UserProfile profile = userProfileService.createProfile(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserProfileResponse.from(profile));
@@ -113,12 +113,4 @@ public class UserController {
                 .orElseThrow(UnauthorizedException::new);
     }
 
-    private void validateProvisionRequest(ProvisionUserRequest request) {
-        if (request.auth0Id() == null || request.auth0Id().isBlank()) {
-            throw new IllegalArgumentException("auth0Id must not be blank");
-        }
-        if (request.email() == null || request.email().isBlank()) {
-            throw new IllegalArgumentException("email must not be blank");
-        }
-    }
 }
