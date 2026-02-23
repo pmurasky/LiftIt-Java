@@ -93,4 +93,46 @@ class UserProvisioningIntegrationTest {
                         .content(body))
                 .andExpect(status().isConflict());
     }
+
+    @Test
+    void shouldReturn400WhenAuth0IdIsBlank() throws Exception {
+        // Given — auth0Id is blank, violating @NotBlank
+        String body = """
+                {"auth0Id": "", "email": "user@example.com"}
+                """;
+
+        // When / Then
+        mockMvc.perform(post("/api/v1/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400WhenEmailIsBlank() throws Exception {
+        // Given — email is blank, violating @NotBlank
+        String body = """
+                {"auth0Id": "auth0|someone", "email": ""}
+                """;
+
+        // When / Then
+        mockMvc.perform(post("/api/v1/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400WhenEmailIsNotValidFormat() throws Exception {
+        // Given — email fails @Email format constraint
+        String body = """
+                {"auth0Id": "auth0|someone", "email": "not-an-email"}
+                """;
+
+        // When / Then
+        mockMvc.perform(post("/api/v1/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
 }

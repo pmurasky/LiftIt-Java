@@ -183,4 +183,40 @@ class UserProfileIntegrationTest {
                         .content(requestBody))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void shouldReturn400WhenUsernameIsBlankOnProfileCreation() throws Exception {
+        // Given — username violates @NotBlank
+        String requestBody = """
+                {
+                  "username": "",
+                  "unitsPreference": "metric"
+                }
+                """;
+
+        // When / Then
+        mockMvc.perform(post("/api/v1/users/me/profile")
+                        .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400WhenUnitsPreferenceIsInvalidOnProfileCreation() throws Exception {
+        // Given — unitsPreference violates @Pattern (must be metric or imperial)
+        String requestBody = """
+                {
+                  "username": "valid_user",
+                  "unitsPreference": "furlongs"
+                }
+                """;
+
+        // When / Then
+        mockMvc.perform(post("/api/v1/users/me/profile")
+                        .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
 }
