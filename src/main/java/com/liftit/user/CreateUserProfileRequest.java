@@ -1,7 +1,6 @@
 package com.liftit.user;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -14,13 +13,14 @@ import java.time.LocalDate;
  * The authenticated user's identity is resolved server-side from the JWT {@code sub}
  * claim — it is never accepted from the request body (IDOR prevention).
  *
- * @param username        user-chosen handle; required, 1–30 characters, globally unique
- * @param displayName     optional display name; max 100 characters
- * @param gender          optional; one of: {@code male}, {@code female},
- *                        {@code non_binary}, {@code prefer_not_to_say}
- * @param birthdate       optional ISO 8601 date ({@code YYYY-MM-DD})
- * @param heightCm        optional height in centimetres; always stored metric
- * @param unitsPreference required; {@code metric} or {@code imperial}
+ * <p>The app is imperial-only — all measurements are in imperial units.
+ *
+ * @param username    user-chosen handle; required, 1–30 characters, globally unique
+ * @param displayName optional display name; max 100 characters
+ * @param gender      optional; one of: {@code male}, {@code female},
+ *                    {@code non_binary}, {@code prefer_not_to_say}
+ * @param birthdate   optional ISO 8601 date ({@code YYYY-MM-DD})
+ * @param heightIn    optional height in inches
  */
 public record CreateUserProfileRequest(
         @NotBlank(message = "username must not be blank")
@@ -38,13 +38,6 @@ public record CreateUserProfileRequest(
 
         LocalDate birthdate,
 
-        Double heightCm,
-
-        @NotNull(message = "unitsPreference must not be null")
-        @Pattern(
-                regexp = "^(metric|imperial)$",
-                message = "unitsPreference must be metric or imperial"
-        )
-        String unitsPreference
+        Double heightIn
 ) {
 }

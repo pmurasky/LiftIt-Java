@@ -27,7 +27,7 @@ class UserProfileJpaEntityTest {
     void shouldConvertFromDomainPreservingAllFields() {
         // Given
         UserProfile profile = new UserProfile(ID, USER_ID, "lifter99", "Test User",
-                "male", LocalDate.of(1990, 5, 15), 180.0, "metric",
+                "male", LocalDate.of(1990, 5, 15), 70.0,
                 NOW, AUDIT_USER, NOW, AUDIT_USER);
 
         // When
@@ -41,8 +41,7 @@ class UserProfileJpaEntityTest {
         assertEquals("Test User", result.displayName());
         assertEquals("male", result.gender());
         assertEquals(LocalDate.of(1990, 5, 15), result.birthdate());
-        assertEquals(180.0, result.heightCm());
-        assertEquals("metric", result.unitsPreference());
+        assertEquals(70.0, result.heightIn());
         assertEquals(NOW, result.createdAt());
         assertEquals(AUDIT_USER, result.createdBy());
         assertEquals(NOW, result.updatedAt());
@@ -53,7 +52,7 @@ class UserProfileJpaEntityTest {
     void shouldMapIdToNullWhenDomainIdIsZero() {
         // Given — id=0 signals "new entity, let the DB assign the PK"
         UserProfile profile = new UserProfile(0L, USER_ID, "newlifter", null, null, null,
-                null, "imperial", NOW, AUDIT_USER, NOW, AUDIT_USER);
+                null, NOW, AUDIT_USER, NOW, AUDIT_USER);
 
         // When
         UserProfileJpaEntity entity = UserProfileJpaEntity.fromDomain(profile);
@@ -64,9 +63,9 @@ class UserProfileJpaEntityTest {
 
     @Test
     void shouldPreserveNullOptionalFields() {
-        // Given — optional fields (displayName, gender, birthdate, heightCm) may be null
+        // Given — optional fields (displayName, gender, birthdate, heightIn) may be null
         UserProfile profile = new UserProfile(ID, USER_ID, "minimallifter", null, null, null,
-                null, "metric", NOW, AUDIT_USER, NOW, AUDIT_USER);
+                null, NOW, AUDIT_USER, NOW, AUDIT_USER);
 
         // When
         UserProfile result = UserProfileJpaEntity.fromDomain(profile).toDomain();
@@ -75,14 +74,14 @@ class UserProfileJpaEntityTest {
         assertNull(result.displayName());
         assertNull(result.gender());
         assertNull(result.birthdate());
-        assertNull(result.heightCm());
+        assertNull(result.heightIn());
     }
 
     @Test
     void shouldReturnNonNullDomainFromRoundTrip() {
         // Given
         UserProfile profile = new UserProfile(ID, USER_ID, "lifter99", null, null, null,
-                null, "metric", NOW, AUDIT_USER, NOW, AUDIT_USER);
+                null, NOW, AUDIT_USER, NOW, AUDIT_USER);
 
         // When
         UserProfile result = UserProfileJpaEntity.fromDomain(profile).toDomain();

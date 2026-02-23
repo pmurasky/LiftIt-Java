@@ -127,7 +127,7 @@ class UserControllerTest {
                 Instant.now(), 1L, Instant.now(), 1L);
         UserProfile profile = new UserProfile(
                 1L, 100L, "alice_lifts", "Alice Smith", "female",
-                LocalDate.of(1990, 6, 15), 165.0, "metric",
+                LocalDate.of(1990, 6, 15), 65.0,
                 Instant.parse("2026-02-21T12:00:00Z"), 1L,
                 Instant.parse("2026-02-21T12:00:00Z"), 1L
         );
@@ -140,8 +140,7 @@ class UserControllerTest {
                   "displayName": "Alice Smith",
                   "gender": "female",
                   "birthdate": "1990-06-15",
-                  "heightCm": 165.0,
-                  "unitsPreference": "metric"
+                  "heightIn": 65.0
                 }
                 """;
 
@@ -153,8 +152,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.userId").value(100))
                 .andExpect(jsonPath("$.username").value("alice_lifts"))
-                .andExpect(jsonPath("$.displayName").value("Alice Smith"))
-                .andExpect(jsonPath("$.unitsPreference").value("metric"));
+                .andExpect(jsonPath("$.displayName").value("Alice Smith"));
     }
 
     @Test
@@ -165,7 +163,7 @@ class UserControllerTest {
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "alice_lifts", null, null, null, null, "metric"
+                "alice_lifts", null, null, null, null
         );
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(userProfileService.createProfile(eq(100L), any(CreateUserProfileRequest.class)))
@@ -186,7 +184,7 @@ class UserControllerTest {
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "taken_name", null, null, null, null, "metric"
+                "taken_name", null, null, null, null
         );
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(userProfileService.createProfile(eq(100L), any(CreateUserProfileRequest.class)))
@@ -207,7 +205,7 @@ class UserControllerTest {
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "", null, null, null, null, "metric"
+                "", null, null, null, null
         );
         when(userRepository.findByAuth0Id(auth0Id)).thenReturn(Optional.of(user));
         when(userProfileService.createProfile(eq(100L), any(CreateUserProfileRequest.class)))
@@ -224,7 +222,7 @@ class UserControllerTest {
     void shouldReturn401WhenNoAuthenticationOnProfileCreation() throws Exception {
         // Given — no authentication in security context
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "alice_lifts", null, null, null, null, "metric"
+                "alice_lifts", null, null, null, null
         );
 
         // When / Then
@@ -240,7 +238,7 @@ class UserControllerTest {
         authenticateAs("auth0|unknown");
         when(userRepository.findByAuth0Id(any(Auth0Id.class))).thenReturn(Optional.empty());
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "ghost_user", null, null, null, null, "metric"
+                "ghost_user", null, null, null, null
         );
 
         // When / Then
@@ -260,7 +258,7 @@ class UserControllerTest {
         User user = new User(100L, auth0Id, Email.of("user@example.com"),
                 Instant.now(), 1L, Instant.now(), 1L);
         UserProfile profile = new UserProfile(
-                1L, 100L, "alice_lifts", null, null, null, null, "metric",
+                1L, 100L, "alice_lifts", null, null, null, null,
                 Instant.parse("2026-02-21T12:00:00Z"), 1L,
                 Instant.parse("2026-02-21T12:00:00Z"), 1L
         );

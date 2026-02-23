@@ -43,7 +43,7 @@ class JpaUserProfileRepositoryTest {
 
     private UserProfile buildProfile(Long id) {
         return new UserProfile(id, USER_ID, "lifter99", null, null, null,
-                null, "metric", NOW, 1L, NOW, 1L);
+                null, NOW, 1L, NOW, 1L);
     }
 
     @Test

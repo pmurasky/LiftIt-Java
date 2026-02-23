@@ -34,6 +34,8 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
  *
  * <p>Each test provisions a fresh user row via the provisioning service and
  * cleans up all non-system rows in {@code @AfterEach} to maintain test isolation.
+ *
+ * <p>The app is imperial-only: all measurements use imperial units (inches, lbs).
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @Testcontainers
@@ -85,8 +87,7 @@ class UserProfileIntegrationTest {
                   "username": "integration_user",
                   "displayName": "Integration User",
                   "gender": "prefer_not_to_say",
-                  "heightCm": 175.0,
-                  "unitsPreference": "metric"
+                  "heightIn": 69.0
                 }
                 """;
 
@@ -98,7 +99,6 @@ class UserProfileIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value("integration_user"))
                 .andExpect(jsonPath("$.displayName").value("Integration User"))
-                .andExpect(jsonPath("$.unitsPreference").value("metric"))
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.userId").isNumber());
     }
@@ -108,8 +108,7 @@ class UserProfileIntegrationTest {
         // Given — create the profile first
         String requestBody = """
                 {
-                  "username": "get_user",
-                  "unitsPreference": "imperial"
+                  "username": "get_user"
                 }
                 """;
         mockMvc.perform(post("/api/v1/users/me/profile")
@@ -122,8 +121,7 @@ class UserProfileIntegrationTest {
         mockMvc.perform(get("/api/v1/users/me/profile")
                         .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("get_user"))
-                .andExpect(jsonPath("$.unitsPreference").value("imperial"));
+                .andExpect(jsonPath("$.username").value("get_user"));
     }
 
     @Test
@@ -141,8 +139,7 @@ class UserProfileIntegrationTest {
         // Given — create the profile once
         String firstRequest = """
                 {
-                  "username": "first_profile",
-                  "unitsPreference": "metric"
+                  "username": "first_profile"
                 }
                 """;
         mockMvc.perform(post("/api/v1/users/me/profile")
@@ -154,8 +151,7 @@ class UserProfileIntegrationTest {
         // When — try to create a second profile
         String secondRequest = """
                 {
-                  "username": "second_profile",
-                  "unitsPreference": "metric"
+                  "username": "second_profile"
                 }
                 """;
 
@@ -172,8 +168,7 @@ class UserProfileIntegrationTest {
         // Given — no Authorization header
         String requestBody = """
                 {
-                  "username": "ghost_user",
-                  "unitsPreference": "metric"
+                  "username": "ghost_user"
                 }
                 """;
 
@@ -189,26 +184,7 @@ class UserProfileIntegrationTest {
         // Given — username violates @NotBlank
         String requestBody = """
                 {
-                  "username": "",
-                  "unitsPreference": "metric"
-                }
-                """;
-
-        // When / Then
-        mockMvc.perform(post("/api/v1/users/me/profile")
-                        .header("Authorization", JwtTestTokenFactory.bearerToken(AUTH0_ID))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void shouldReturn400WhenUnitsPreferenceIsInvalidOnProfileCreation() throws Exception {
-        // Given — unitsPreference violates @Pattern (must be metric or imperial)
-        String requestBody = """
-                {
-                  "username": "valid_user",
-                  "unitsPreference": "furlongs"
+                  "username": ""
                 }
                 """;
 

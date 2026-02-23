@@ -11,15 +11,14 @@ import java.time.LocalDate;
  * Internal audit columns ({@code createdBy}, {@code updatedBy}) are excluded —
  * they are server-side concerns not needed by the frontend.
  *
- * @param id              the profile's application-assigned ID
- * @param userId          the owning user's application ID
- * @param username        the user-chosen handle
- * @param displayName     optional display name; may be null
- * @param gender          optional gender; may be null
- * @param birthdate       optional birthdate; may be null
- * @param heightCm        optional height in centimetres; may be null
- * @param unitsPreference the user's preferred unit system
- * @param createdAt       the timestamp when the profile was created (UTC)
+ * @param id          the profile's application-assigned ID
+ * @param userId      the owning user's application ID
+ * @param username    the user-chosen handle
+ * @param displayName optional display name; may be null
+ * @param gender      optional gender; may be null
+ * @param birthdate   optional birthdate; may be null
+ * @param heightIn    optional height in inches; may be null
+ * @param createdAt   the timestamp when the profile was created (UTC)
  */
 public record UserProfileResponse(
         Long id,
@@ -28,8 +27,7 @@ public record UserProfileResponse(
         String displayName,
         String gender,
         LocalDate birthdate,
-        Double heightCm,
-        String unitsPreference,
+        Double heightIn,
         Instant createdAt
 ) {
 
@@ -47,8 +45,7 @@ public record UserProfileResponse(
                 profile.displayName(),
                 profile.gender(),
                 profile.birthdate(),
-                profile.heightCm(),
-                profile.unitsPreference(),
+                profile.heightIn(),
                 profile.createdAt()
         );
     }

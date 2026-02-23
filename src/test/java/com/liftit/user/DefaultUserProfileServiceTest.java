@@ -33,7 +33,7 @@ class DefaultUserProfileServiceTest {
         // Given
         CreateUserProfileRequest request = new CreateUserProfileRequest(
                 "alice_lifts", "Alice Smith", "female",
-                LocalDate.of(1990, 6, 15), 165.0, "metric"
+                LocalDate.of(1990, 6, 15), 65.0
         );
         when(profileRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(profileRepository.findByUsername("alice_lifts")).thenReturn(Optional.empty());
@@ -49,8 +49,7 @@ class DefaultUserProfileServiceTest {
         assertEquals("Alice Smith", result.displayName());
         assertEquals("female", result.gender());
         assertEquals(LocalDate.of(1990, 6, 15), result.birthdate());
-        assertEquals(165.0, result.heightCm());
-        assertEquals("metric", result.unitsPreference());
+        assertEquals(65.0, result.heightIn());
         verify(profileRepository).save(any(UserProfile.class));
     }
 
@@ -58,7 +57,7 @@ class DefaultUserProfileServiceTest {
     void shouldCreateProfileWithRequiredFieldsOnlyWhenOptionalFieldsAreNull() {
         // Given
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "bob_lifts", null, null, null, null, "imperial"
+                "bob_lifts", null, null, null, null
         );
         when(profileRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(profileRepository.findByUsername("bob_lifts")).thenReturn(Optional.empty());
@@ -72,15 +71,14 @@ class DefaultUserProfileServiceTest {
         assertNull(result.displayName());
         assertNull(result.gender());
         assertNull(result.birthdate());
-        assertNull(result.heightCm());
-        assertEquals("imperial", result.unitsPreference());
+        assertNull(result.heightIn());
     }
 
     @Test
     void shouldSetSystemAdminAsAuditUserOnProfileCreation() {
         // Given
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "carol_lifts", null, null, null, null, "metric"
+                "carol_lifts", null, null, null, null
         );
         when(profileRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(profileRepository.findByUsername("carol_lifts")).thenReturn(Optional.empty());
@@ -99,7 +97,7 @@ class DefaultUserProfileServiceTest {
         // Given
         Instant before = Instant.now();
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "dave_lifts", null, null, null, null, "metric"
+                "dave_lifts", null, null, null, null
         );
         when(profileRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(profileRepository.findByUsername("dave_lifts")).thenReturn(Optional.empty());
@@ -122,7 +120,7 @@ class DefaultUserProfileServiceTest {
         UserProfile existing = existingProfile(USER_ID, "alice_lifts");
         when(profileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(existing));
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "alice_new", null, null, null, null, "metric"
+                "alice_new", null, null, null, null
         );
 
         // When / Then
@@ -141,7 +139,7 @@ class DefaultUserProfileServiceTest {
         when(profileRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
         when(profileRepository.findByUsername("taken_name")).thenReturn(Optional.of(existing));
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "taken_name", null, null, null, null, "metric"
+                "taken_name", null, null, null, null
         );
 
         // When / Then
@@ -157,7 +155,7 @@ class DefaultUserProfileServiceTest {
     void shouldThrowIllegalArgumentExceptionWhenUserIdIsNull() {
         // Given
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "user", null, null, null, null, "metric"
+                "user", null, null, null, null
         );
 
         // When / Then
@@ -174,18 +172,7 @@ class DefaultUserProfileServiceTest {
     void shouldThrowIllegalArgumentExceptionWhenUsernameIsBlank() {
         // Given
         CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "  ", null, null, null, null, "metric"
-        );
-
-        // When / Then
-        assertThrows(IllegalArgumentException.class, () -> service.createProfile(USER_ID, request));
-    }
-
-    @Test
-    void shouldThrowIllegalArgumentExceptionWhenUnitsPreferenceIsNull() {
-        // Given
-        CreateUserProfileRequest request = new CreateUserProfileRequest(
-                "user", null, null, null, null, null
+                "  ", null, null, null, null
         );
 
         // When / Then
@@ -230,7 +217,7 @@ class DefaultUserProfileServiceTest {
 
     private UserProfile existingProfile(Long userId, String username) {
         return new UserProfile(
-                PROFILE_ID, userId, username, null, null, null, null, "metric",
+                PROFILE_ID, userId, username, null, null, null, null,
                 Instant.now(), 1L, Instant.now(), 1L
         );
     }

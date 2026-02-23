@@ -42,11 +42,8 @@ class UserProfileJpaEntity {
     @Column(name = "birthdate")
     private LocalDate birthdate;
 
-    @Column(name = "height_cm", precision = 5, scale = 1)
-    private BigDecimal heightCm;
-
-    @Column(name = "units_preference", nullable = false, length = 10)
-    private String unitsPreference;
+    @Column(name = "height_in", precision = 5, scale = 1)
+    private BigDecimal heightIn;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -76,8 +73,7 @@ class UserProfileJpaEntity {
             String displayName,
             String gender,
             LocalDate birthdate,
-            Double heightCm,
-            String unitsPreference,
+            Double heightIn,
             Instant createdAt,
             Long createdBy,
             Instant updatedAt,
@@ -88,8 +84,7 @@ class UserProfileJpaEntity {
         this.displayName = displayName;
         this.gender = gender;
         this.birthdate = birthdate;
-        this.heightCm = heightCm == null ? null : BigDecimal.valueOf(heightCm);
-        this.unitsPreference = unitsPreference;
+        this.heightIn = heightIn == null ? null : BigDecimal.valueOf(heightIn);
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.updatedAt = updatedAt;
@@ -102,9 +97,9 @@ class UserProfileJpaEntity {
      * @return a fully populated {@link UserProfile}
      */
     UserProfile toDomain() {
-        Double heightCmDouble = heightCm == null ? null : heightCm.doubleValue();
+        Double heightInDouble = heightIn == null ? null : heightIn.doubleValue();
         return new UserProfile(id, userId, username, displayName, gender, birthdate,
-                heightCmDouble, unitsPreference, createdAt, createdBy, updatedAt, updatedBy);
+                heightInDouble, createdAt, createdBy, updatedAt, updatedBy);
     }
 
     /**
@@ -120,7 +115,7 @@ class UserProfileJpaEntity {
         Long id = profile.id() == 0 ? null : profile.id();
         return new UserProfileJpaEntity(id, profile.userId(), profile.username(),
                 profile.displayName(), profile.gender(), profile.birthdate(),
-                profile.heightCm(), profile.unitsPreference(),
+                profile.heightIn(),
                 profile.createdAt(), profile.createdBy(), profile.updatedAt(), profile.updatedBy());
     }
 }

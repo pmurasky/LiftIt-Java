@@ -18,11 +18,10 @@ class UserProfileTest {
     void shouldCreateUserProfileWithRequiredFieldsOnly() {
         // Given
         String username = "alice";
-        String unitsPreference = "metric";
 
         // When
         UserProfile profile = new UserProfile(
-                PROFILE_ID, USER_ID, username, null, null, null, null, unitsPreference,
+                PROFILE_ID, USER_ID, username, null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         );
 
@@ -33,8 +32,7 @@ class UserProfileTest {
         assertNull(profile.displayName());
         assertNull(profile.gender());
         assertNull(profile.birthdate());
-        assertNull(profile.heightCm());
-        assertEquals(unitsPreference, profile.unitsPreference());
+        assertNull(profile.heightIn());
         assertEquals(NOW, profile.createdAt());
         assertEquals(SYSTEM_ADMIN_ID, profile.createdBy());
         assertEquals(NOW, profile.updatedAt());
@@ -48,13 +46,12 @@ class UserProfileTest {
         String displayName = "Bob Smith";
         String gender = "male";
         LocalDate birthdate = LocalDate.of(1990, 6, 15);
-        Double heightCm = 180.5;
-        String unitsPreference = "imperial";
+        Double heightIn = 70.0;
 
         // When
         UserProfile profile = new UserProfile(
-                PROFILE_ID, USER_ID, username, displayName, gender, birthdate, heightCm,
-                unitsPreference, NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
+                PROFILE_ID, USER_ID, username, displayName, gender, birthdate, heightIn,
+                NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         );
 
         // Then
@@ -62,15 +59,14 @@ class UserProfileTest {
         assertEquals(displayName, profile.displayName());
         assertEquals(gender, profile.gender());
         assertEquals(birthdate, profile.birthdate());
-        assertEquals(heightCm, profile.heightCm());
-        assertEquals(unitsPreference, profile.unitsPreference());
+        assertEquals(heightIn, profile.heightIn());
     }
 
     @Test
     void shouldThrowWhenIdIsNull() {
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> new UserProfile(
-                null, USER_ID, "alice", null, null, null, null, "metric",
+                null, USER_ID, "alice", null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         ));
     }
@@ -79,7 +75,7 @@ class UserProfileTest {
     void shouldThrowWhenUserIdIsNull() {
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> new UserProfile(
-                PROFILE_ID, null, "alice", null, null, null, null, "metric",
+                PROFILE_ID, null, "alice", null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         ));
     }
@@ -88,7 +84,7 @@ class UserProfileTest {
     void shouldThrowWhenUsernameIsNull() {
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> new UserProfile(
-                PROFILE_ID, USER_ID, null, null, null, null, null, "metric",
+                PROFILE_ID, USER_ID, null, null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         ));
     }
@@ -97,16 +93,7 @@ class UserProfileTest {
     void shouldThrowWhenUsernameIsBlank() {
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> new UserProfile(
-                PROFILE_ID, USER_ID, "  ", null, null, null, null, "metric",
-                NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
-        ));
-    }
-
-    @Test
-    void shouldThrowWhenUnitsPreferenceIsNull() {
-        // When / Then
-        assertThrows(IllegalArgumentException.class, () -> new UserProfile(
-                PROFILE_ID, USER_ID, "alice", null, null, null, null, null,
+                PROFILE_ID, USER_ID, "  ", null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         ));
     }
@@ -115,7 +102,7 @@ class UserProfileTest {
     void shouldThrowWhenCreatedAtIsNull() {
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> new UserProfile(
-                PROFILE_ID, USER_ID, "alice", null, null, null, null, "metric",
+                PROFILE_ID, USER_ID, "alice", null, null, null, null,
                 null, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         ));
     }
@@ -124,7 +111,7 @@ class UserProfileTest {
     void shouldThrowWhenCreatedByIsNull() {
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> new UserProfile(
-                PROFILE_ID, USER_ID, "alice", null, null, null, null, "metric",
+                PROFILE_ID, USER_ID, "alice", null, null, null, null,
                 NOW, null, NOW, SYSTEM_ADMIN_ID
         ));
     }
@@ -133,7 +120,7 @@ class UserProfileTest {
     void shouldThrowWhenUpdatedAtIsNull() {
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> new UserProfile(
-                PROFILE_ID, USER_ID, "alice", null, null, null, null, "metric",
+                PROFILE_ID, USER_ID, "alice", null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, null, SYSTEM_ADMIN_ID
         ));
     }
@@ -142,7 +129,7 @@ class UserProfileTest {
     void shouldThrowWhenUpdatedByIsNull() {
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> new UserProfile(
-                PROFILE_ID, USER_ID, "alice", null, null, null, null, "metric",
+                PROFILE_ID, USER_ID, "alice", null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, null
         ));
     }
@@ -151,11 +138,11 @@ class UserProfileTest {
     void shouldConsiderEqualWhenSameId() {
         // Given
         UserProfile a = new UserProfile(
-                PROFILE_ID, USER_ID, "alice", null, null, null, null, "metric",
+                PROFILE_ID, USER_ID, "alice", null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         );
         UserProfile b = new UserProfile(
-                PROFILE_ID, USER_ID, "alice", null, null, null, null, "metric",
+                PROFILE_ID, USER_ID, "alice", null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         );
 
@@ -168,11 +155,11 @@ class UserProfileTest {
     void shouldNotConsiderEqualWhenDifferentIds() {
         // Given
         UserProfile a = new UserProfile(
-                PROFILE_ID, USER_ID, "alice", null, null, null, null, "metric",
+                PROFILE_ID, USER_ID, "alice", null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         );
         UserProfile b = new UserProfile(
-                2L, USER_ID, "alice", null, null, null, null, "metric",
+                2L, USER_ID, "alice", null, null, null, null,
                 NOW, SYSTEM_ADMIN_ID, NOW, SYSTEM_ADMIN_ID
         );
 

@@ -10,8 +10,10 @@ import java.time.LocalDate;
  * identity table. Has a 1-to-1 relationship with {@code users} via {@code userId}.
  *
  * <p>Optional fields ({@code displayName}, {@code gender}, {@code birthdate},
- * {@code heightCm}) may be null — they are supplied during onboarding at the
+ * {@code heightIn}) may be null — they are supplied during onboarding at the
  * user's discretion.
+ *
+ * <p>The app is imperial-only. All measurements are stored in imperial units.
  *
  * <p>Body weight is intentionally absent here. Weight history is tracked as a
  * time-series in the {@code body_weight_history} table.
@@ -23,8 +25,7 @@ public record UserProfile(
         String displayName,
         String gender,
         LocalDate birthdate,
-        Double heightCm,
-        String unitsPreference,
+        Double heightIn,
         Instant createdAt,
         Long createdBy,
         Instant updatedAt,
@@ -32,7 +33,7 @@ public record UserProfile(
 ) {
     /**
      * Compact canonical constructor — validates required fields.
-     * Optional fields (displayName, gender, birthdate, heightCm) may be null.
+     * Optional fields (displayName, gender, birthdate, heightIn) may be null.
      *
      * @throws IllegalArgumentException if any required field is null or blank
      */
@@ -40,7 +41,6 @@ public record UserProfile(
         requireNonNull(id, "id");
         requireNonNull(userId, "userId");
         requireNonBlank(username, "username");
-        requireNonNull(unitsPreference, "unitsPreference");
         requireNonNull(createdAt, "createdAt");
         requireNonNull(createdBy, "createdBy");
         requireNonNull(updatedAt, "updatedAt");

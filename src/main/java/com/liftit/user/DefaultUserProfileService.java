@@ -61,9 +61,6 @@ public class DefaultUserProfileService implements UserProfileService {
         if (request.username() == null || request.username().isBlank()) {
             throw new IllegalArgumentException("username must not be blank");
         }
-        if (request.unitsPreference() == null) {
-            throw new IllegalArgumentException("unitsPreference must not be null");
-        }
     }
 
     private void checkForDuplicates(Long userId, String username) {
@@ -81,7 +78,7 @@ public class DefaultUserProfileService implements UserProfileService {
                 UNASSIGNED_ID, userId,
                 request.username(), request.displayName(),
                 request.gender(), request.birthdate(),
-                request.heightCm(), request.unitsPreference(),
+                request.heightIn(),
                 now, SYSTEM_ADMIN_ID, now, SYSTEM_ADMIN_ID
         );
     }
