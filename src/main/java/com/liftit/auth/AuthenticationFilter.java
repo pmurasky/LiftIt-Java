@@ -14,7 +14,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Servlet filter that authenticates incoming requests via JWT bearer tokens.
@@ -23,8 +22,9 @@ import java.util.Set;
  * the {@code Authorization} header, validates it using {@link AuthenticationService},
  * and populates the {@link SecurityContextHolder} on success.
  *
- * <p>Public endpoints (registration, login, token refresh, user provisioning) are
- * excluded from token validation via {@link #shouldNotFilter}.
+ * <p>The user-provisioning endpoint ({@code POST /api/v1/users/me}) is excluded from
+ * token validation via {@link #shouldNotFilter}. Login, registration, and token refresh
+ * are handled entirely by Auth0's hosted UI — the client never calls this server for those.
  *
  * <p>Returns {@code 401 Unauthorized} immediately for missing or invalid tokens
  * without invoking downstream filters.
@@ -35,12 +35,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private static final String MISSING_HEADER_MSG = "Missing or invalid Authorization header";
     private static final String INVALID_TOKEN_MSG = "Invalid or expired token";
 
-    private static final Set<String> PUBLIC_URIS = Set.of(
-            "/api/v1/users/me",
-            "/api/auth/login",
-            "/api/auth/register",
-            "/api/auth/refresh"
-    );
+    private static final String PUBLIC_URI = "/api/v1/users/me";
 
     private final AuthenticationService authenticationService;
     private final BearerTokenExtractor tokenExtractor;
@@ -57,15 +52,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Skips token validation for public endpoints that do not require authentication.
+     * Skips token validation for the user-provisioning endpoint.
      *
-     * <p>Only {@code POST} requests to the provisioning and auth endpoints are public;
-     * all other methods on those paths still require a valid token.
+     * <p>Only {@code POST /api/v1/users/me} is public; all other paths require a bearer token.
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return HttpMethod.POST.matches(request.getMethod())
-                && PUBLIC_URIS.contains(request.getRequestURI());
+                && PUBLIC_URI.equals(request.getRequestURI());
     }
 
     @Override

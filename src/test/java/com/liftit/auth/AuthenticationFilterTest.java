@@ -16,7 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -157,18 +156,12 @@ class AuthenticationFilterTest {
         verify(chain, never()).doFilter(any(), any());
     }
 
-    @ParameterizedTest
-    @CsvSource({
-        "POST, /api/v1/users/me",
-        "POST, /api/auth/login",
-        "POST, /api/auth/register",
-        "POST, /api/auth/refresh"
-    })
-    void shouldPassThroughPublicEndpointsWithoutCheckingToken(String method, String uri)
+    @Test
+    void shouldPassThroughUserProvisioningEndpointWithoutCheckingToken()
             throws ServletException, IOException {
-        // Given — no Authorization header on a public route
-        when(request.getMethod()).thenReturn(method);
-        when(request.getRequestURI()).thenReturn(uri);
+        // Given — POST /api/v1/users/me is the only public endpoint
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestURI()).thenReturn("/api/v1/users/me");
         when(request.getHeader("Authorization")).thenReturn(null);
 
         // When
@@ -180,11 +173,17 @@ class AuthenticationFilterTest {
         verify(response, never()).sendError(anyInt(), anyString());
     }
 
-    @Test
-    void shouldRequireTokenForProtectedEndpoints() throws ServletException, IOException {
+    @ParameterizedTest
+    @CsvSource({
+        "POST, /api/v1/users/me/profile",
+        "GET,  /api/v1/users/me/profile",
+        "GET,  /api/auth/me"
+    })
+    void shouldRequireTokenForProtectedEndpoints(String method, String uri)
+            throws ServletException, IOException {
         // Given — no Authorization header on a protected route
-        when(request.getMethod()).thenReturn("GET");
-        when(request.getRequestURI()).thenReturn("/api/v1/users/me/profile");
+        when(request.getMethod()).thenReturn(method.trim());
+        when(request.getRequestURI()).thenReturn(uri.trim());
         when(request.getHeader("Authorization")).thenReturn(null);
         when(extractor.extract(null)).thenReturn(java.util.Optional.empty());
 
