@@ -1,6 +1,7 @@
 package com.liftit.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.liftit.GlobalExceptionHandler;
 import com.liftit.user.exception.DuplicateProfileException;
 import com.liftit.user.exception.DuplicateUserException;
 import org.junit.jupiter.api.AfterEach;
@@ -41,7 +42,9 @@ class UserControllerTest {
         UserController controller = new UserController(
                 userProvisioningService, userProfileService, userRepository
         );
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @AfterEach

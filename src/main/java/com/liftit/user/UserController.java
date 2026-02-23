@@ -1,13 +1,10 @@
 package com.liftit.user;
 
-import com.liftit.user.exception.DuplicateProfileException;
-import com.liftit.user.exception.DuplicateUserException;
 import com.liftit.user.exception.UnauthorizedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -96,26 +93,6 @@ public class UserController {
                 .map(UserProfileResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @ExceptionHandler(DuplicateUserException.class)
-    public ResponseEntity<Void> handleDuplicateUser(DuplicateUserException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).build();
-    }
-
-    @ExceptionHandler(DuplicateProfileException.class)
-    public ResponseEntity<Void> handleDuplicateProfile(DuplicateProfileException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).build();
-    }
-
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<Void> handleUnauthorized(UnauthorizedException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Void> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     /**
