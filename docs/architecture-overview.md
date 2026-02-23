@@ -23,8 +23,10 @@
 ## Database Strategy
 
 ### Migration
-- Liquibase
+- Liquibase (see ADR-0001: `docs/adr/0001-use-liquibase-for-database-migrations.md`)
 - SQL format changelogs (`.sql` files with `--liquibase formatted sql` header)
+- Master changelog: `src/main/resources/db/changelog/db.changelog-master.xml`
+- Individual changeset files: `src/main/resources/db/changelog/`
 - Liquibase runs automatically on application startup in all environments
 
 ### Liquibase Rules (Non-Negotiable)
@@ -72,6 +74,8 @@ V{version}__{description}.sql
 - Description uses underscores, lowercase
 - Double underscore separates version from description
 - Examples: `V1__create_users_table.sql`, `V2__fix_users_table.sql`
+- All files live in `src/main/resources/db/changelog/`
+- Each new file must be added to `db.changelog-master.xml`
 
 ### Naming Conventions
 - snake_case
