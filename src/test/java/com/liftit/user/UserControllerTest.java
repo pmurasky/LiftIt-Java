@@ -1,6 +1,6 @@
 package com.liftit.user;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.liftit.GlobalExceptionHandler;
 import com.liftit.user.exception.DuplicateProfileException;
 import com.liftit.user.exception.DuplicateUserException;
@@ -32,7 +32,7 @@ class UserControllerTest {
     private UserProvisioningService userProvisioningService;
     private UserProfileService userProfileService;
     private UserRepository userRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
