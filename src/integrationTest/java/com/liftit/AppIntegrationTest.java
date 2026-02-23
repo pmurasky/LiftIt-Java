@@ -37,8 +37,8 @@ class AppIntegrationTest {
     }
 
     @Test
-    void flywayCreatesUsersTable() {
-        // Given / When - Flyway runs automatically on startup
+    void liquibaseCreatesUsersTable() {
+        // Given / When - Liquibase runs automatically on startup
         // Then - users table exists with the correct columns (Auth0-based schema, no password/username)
         List<String> columnNames = jdbcTemplate.queryForList(
                 "SELECT column_name FROM information_schema.columns " +
@@ -53,8 +53,8 @@ class AppIntegrationTest {
     }
 
     @Test
-    void flywaySeetsSystemAdminUser() {
-        // Given / When - Flyway seeds the system admin on startup
+    void liquibaseSeedsSystemAdminUser() {
+        // Given / When - Liquibase seeds the system admin on startup
         // Then - exactly one system admin row exists with id=1
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE id = 1 AND auth0_id = 'system'",
