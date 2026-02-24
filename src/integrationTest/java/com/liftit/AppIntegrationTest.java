@@ -41,9 +41,9 @@ class AppIntegrationTest {
         // Given / When - Liquibase runs automatically on startup
         // Then - users table exists with the correct columns (Auth0-based schema, no password/username)
         List<String> columnNames = jdbcTemplate.queryForList(
-                "SELECT column_name FROM information_schema.columns " +
-                "WHERE table_schema = 'public' AND table_name = 'users' " +
-                "ORDER BY column_name",
+                "SELECT column_name FROM information_schema.columns "
+                + "WHERE table_schema = 'public' AND table_name = 'users' "
+                + "ORDER BY column_name",
                 String.class
         );
 

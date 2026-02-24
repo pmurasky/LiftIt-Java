@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -53,7 +54,7 @@ class AuthenticationFilterTest {
         AuthenticationResult result = AuthenticationResult.of(Token.of(rawToken), auth0Id);
 
         when(request.getHeader("Authorization")).thenReturn("Bearer " + rawToken);
-        when(extractor.extract("Bearer " + rawToken)).thenReturn(java.util.Optional.of(rawToken));
+        when(extractor.extract("Bearer " + rawToken)).thenReturn(Optional.of(rawToken));
         when(authService.authenticate(Credentials.bearer(rawToken))).thenReturn(result);
 
         // When
@@ -72,7 +73,7 @@ class AuthenticationFilterTest {
             throws ServletException, IOException {
         // Given
         when(request.getHeader("Authorization")).thenReturn(null);
-        when(extractor.extract(null)).thenReturn(java.util.Optional.empty());
+        when(extractor.extract(null)).thenReturn(Optional.empty());
 
         // When
         filter.doFilterInternal(request, response, chain);
@@ -89,7 +90,7 @@ class AuthenticationFilterTest {
         // Given
         String rawToken = "expired.jwt.token";
         when(request.getHeader("Authorization")).thenReturn("Bearer " + rawToken);
-        when(extractor.extract("Bearer " + rawToken)).thenReturn(java.util.Optional.of(rawToken));
+        when(extractor.extract("Bearer " + rawToken)).thenReturn(Optional.of(rawToken));
         when(authService.authenticate(Credentials.bearer(rawToken)))
                 .thenThrow(InvalidTokenException.expired());
 
@@ -108,7 +109,7 @@ class AuthenticationFilterTest {
         // Given
         String rawToken = "malformed.token";
         when(request.getHeader("Authorization")).thenReturn("Bearer " + rawToken);
-        when(extractor.extract("Bearer " + rawToken)).thenReturn(java.util.Optional.of(rawToken));
+        when(extractor.extract("Bearer " + rawToken)).thenReturn(Optional.of(rawToken));
         when(authService.authenticate(Credentials.bearer(rawToken)))
                 .thenThrow(InvalidTokenException.malformed());
 
@@ -126,7 +127,7 @@ class AuthenticationFilterTest {
         // Given
         String rawToken = "tampered.jwt.token";
         when(request.getHeader("Authorization")).thenReturn("Bearer " + rawToken);
-        when(extractor.extract("Bearer " + rawToken)).thenReturn(java.util.Optional.of(rawToken));
+        when(extractor.extract("Bearer " + rawToken)).thenReturn(Optional.of(rawToken));
         when(authService.authenticate(Credentials.bearer(rawToken)))
                 .thenThrow(InvalidTokenException.invalidSignature());
 
@@ -144,7 +145,7 @@ class AuthenticationFilterTest {
         // Given
         String rawToken = "any.jwt.token";
         when(request.getHeader("Authorization")).thenReturn("Bearer " + rawToken);
-        when(extractor.extract("Bearer " + rawToken)).thenReturn(java.util.Optional.of(rawToken));
+        when(extractor.extract("Bearer " + rawToken)).thenReturn(Optional.of(rawToken));
         when(authService.authenticate(Credentials.bearer(rawToken)))
                 .thenThrow(AuthenticationException.invalidCredentials());
 
@@ -185,7 +186,7 @@ class AuthenticationFilterTest {
         when(request.getMethod()).thenReturn(method.trim());
         when(request.getRequestURI()).thenReturn(uri.trim());
         when(request.getHeader("Authorization")).thenReturn(null);
-        when(extractor.extract(null)).thenReturn(java.util.Optional.empty());
+        when(extractor.extract(null)).thenReturn(Optional.empty());
 
         // When
         filter.doFilter(request, response, chain);
