@@ -42,7 +42,7 @@ class AuthControllerTest {
         SecurityContextHolder.clearContext();
 
         // When / Then
-        assertThrows(IllegalStateException.class, () -> controller.me());
+        assertThrows(IllegalStateException.class, controller::me);
     }
 
     @Test

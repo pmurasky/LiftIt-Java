@@ -7,7 +7,7 @@ import com.liftit.user.Email;
  * Thrown when an attempt is made to provision a user that already exists,
  * identified by either their Auth0 subject identifier or email address.
  */
-public class DuplicateUserException extends RuntimeException {
+public final class DuplicateUserException extends RuntimeException {
 
     private DuplicateUserException(String message) {
         super(message);

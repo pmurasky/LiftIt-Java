@@ -9,7 +9,7 @@ package com.liftit.auth.exception;
  *
  * <p>Maps to {@code 401 Unauthorized} at the controller layer.
  */
-public class InvalidTokenException extends RuntimeException {
+public final class InvalidTokenException extends RuntimeException {
 
     private InvalidTokenException(String message) {
         super(message);

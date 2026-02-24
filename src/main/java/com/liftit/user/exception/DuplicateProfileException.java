@@ -5,7 +5,7 @@ package com.liftit.user.exception;
  * existing one — either the user already has a profile (1-to-1 constraint)
  * or the chosen username is already taken.
  */
-public class DuplicateProfileException extends RuntimeException {
+public final class DuplicateProfileException extends RuntimeException {
 
     private DuplicateProfileException(String message) {
         super(message);
