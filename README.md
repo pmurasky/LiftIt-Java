@@ -55,3 +55,26 @@ When adding a new migration:
 2. Add a `<include file="..."/>` entry to `db.changelog-master.xml`
 
 See `docs/architecture-overview.md` and `docs/adr/0001-use-liquibase-for-database-migrations.md` for full conventions.
+
+## Code quality — OpenRewrite
+
+Automated refactoring is managed by the [OpenRewrite Gradle plugin](https://docs.openrewrite.org/).
+OpenRewrite is **not** run on every build; it is run on demand before committing quality improvements.
+
+```bash
+# Preview what active recipes would change (no files modified)
+./gradlew rewriteDryRun
+# Patch written to: build/reports/rewrite/rewrite.patch
+
+# Apply changes after reviewing the dry-run diff
+./gradlew rewriteRun
+
+# Explore all available recipes
+./gradlew rewriteDiscover
+```
+
+Active recipes are configured in the `rewrite { }` block in `build.gradle`.
+Always run `rewriteDryRun` first, review the patch, then run `rewriteRun`.
+
+See `docs/adr/0002-use-openrewrite-for-automated-refactoring.md` for the full recipe
+selection policy, tier guidance, and one-time migration workflow.
