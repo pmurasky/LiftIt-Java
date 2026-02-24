@@ -55,7 +55,15 @@ dependencies {
 }
 
 rewrite {
-    activeRecipe('org.openrewrite.staticanalysis.CommonStaticAnalysis')
+    // Tier 1 — always active. See docs/adr/0002-use-openrewrite-for-automated-refactoring.md
+    activeRecipe(
+        'org.openrewrite.staticanalysis.CommonStaticAnalysis',
+        'org.openrewrite.staticanalysis.CodeCleanup',
+        'org.openrewrite.staticanalysis.MissingOverrideAnnotation',
+        'org.openrewrite.staticanalysis.InstanceOfPatternMatch',
+        'org.openrewrite.staticanalysis.FinalizePrivateFields',
+        'org.openrewrite.staticanalysis.JavaApiBestPractices',
+    )
 }
 
 test {
