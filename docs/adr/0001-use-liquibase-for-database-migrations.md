@@ -42,6 +42,18 @@ removed from the project.
 Migration files use the `.sql` extension with `--liquibase formatted sql` as the first line,
 changesets identified by `--changeset author:slug`, and rollback documented via `--rollback`.
 
+The following four operational rules apply to all changesets:
+
+1. **Keep changesets atomic** — each changeset contains one type of change (e.g. a single
+   `CREATE TABLE`) to prevent partial updates and simplify error recovery.
+2. **Use consistent naming** — file and changeset ID naming follows the team convention
+   defined below; deviations will cause merge conflicts and confuse migration order.
+3. **Never modify an applied changeset** — once applied to any shared database, the SQL, `id`,
+   and file path are immutable. Modifications cause checksum errors or double-execution.
+   Always write a new incremental changeset instead.
+4. **Include rollback statements** — every changeset must define its inverse operation via a
+   `--rollback` block to enable seamless downgrades without manual SQL.
+
 File naming convention (unchanged from Flyway):
 ```
 V{version}__{description}.sql
@@ -74,9 +86,15 @@ Not considered — the team has already standardised on Liquibase SQL format in 
 ### Positive
 
 - Build tooling now matches the existing migration files and architecture documentation
-- Explicit `--rollback` blocks per changeset are supported without a paid licence
+- Explicit `--rollback` blocks per changeset are supported without a paid licence, enabling
+  seamless downgrades for all change types including complex schema transformations
 - `DATABASECHANGELOG` table managed by Liquibase provides checksum verification — applied
-  changesets are immutable by design
+  changesets are immutable by design; any modification triggers a startup failure, enforcing
+  the "never modify an applied changeset" rule automatically
+- Atomic changesets (one change type per changeset) prevent partial updates and make targeted
+  rollbacks reliable
+- Consistent file and changeset ID naming conventions simplify merges and make migration
+  history navigable for new developers
 - Master changelog file provides a single source of truth for migration order
 
 ### Negative

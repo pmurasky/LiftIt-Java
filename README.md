@@ -54,6 +54,15 @@ When adding a new migration:
 1. Create `src/main/resources/db/changelog/V{n+1}__{description}.sql`
 2. Add a `<include file="..."/>` entry to `db.changelog-master.xml`
 
+**Four rules, no exceptions:**
+
+| Rule | Summary |
+|------|---------|
+| **Atomic changesets** | One change type per changeset (e.g. a single `CREATE TABLE`). Prevents partial updates and simplifies rollback targeting. |
+| **Consistent naming** | Files: `V{n}__{description}.sql`. IDs: `liftit:<slug>`. Never deviate — breaks merge order and confuses history. |
+| **Never modify applied changesets** | Once applied to any shared database, SQL, `id`, and file path are frozen. Modifications cause checksum errors or double-execution. Write a new changeset instead. |
+| **Include rollback statements** | Every changeset must define its inverse via `--rollback`. Required for all changes, not just complex ones. |
+
 See `docs/architecture-overview.md` and `docs/adr/0001-use-liquibase-for-database-migrations.md` for full conventions.
 
 ## Code quality — OpenRewrite

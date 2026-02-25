@@ -31,42 +31,24 @@
 
 ### Liquibase Rules (Non-Negotiable)
 
-#### Never modify an applied changeset
-Once a changeset has been applied, Liquibase stores its checksum in the `DATABASECHANGELOG`
-table. If you modify the changeset SQL, Liquibase will detect the checksum mismatch and
-**fail to start** in any environment where it previously ran. This is true even for whitespace
-or comment changes.
-
-**Rule: Applied changesets are immutable. Always write a new changeset to amend.**
-
-#### Changeset granularity
-One changeset = one logical unit of work. Do not split a single logical change into many
-one-statement changesets, and do not bundle unrelated changes into one changeset.
+#### Keep changesets atomic
+Each changeset must represent **one type of change** — a single `CREATE TABLE`, a single
+`ALTER TABLE`, a single data-seed block, etc. Atomic changesets prevent partial updates: if
+an error occurs mid-migration only that one changeset is rolled back, not a bundle of
+unrelated changes. They also make error recovery and `--rollback` targeting straightforward.
 
 **Examples:**
-- ✅ One changeset to fix all columns on a single table (one logical correction)
 - ✅ One changeset to create a new table (one logical addition)
-- ❌ One changeset per `ALTER TABLE` statement (too granular — over-engineering)
+- ✅ One changeset to fix all columns on a single table (one logical correction)
 - ❌ One changeset that creates three unrelated tables (too broad — hard to roll back)
+- ❌ One changeset per individual `ALTER TABLE` column (too granular — over-engineering)
 
-#### Changelog file format
-Use SQL format. Each file must begin with:
-```sql
---liquibase formatted sql
-```
-Each changeset block begins with:
-```sql
---changeset author:id
-```
-The `id` must be unique within the file. Convention: use a short descriptive slug
-(e.g. `liftit:create-users-table`), not a bare integer.
+#### Use consistent naming
+Follow the project-defined naming convention without exception. Consistent names simplify
+merges (no ordering conflicts), help new developers understand migration history at a glance,
+and ensure the master changelog `<include>` order is always predictable.
 
-#### Rollback
-Every changeset should include a `--rollback` comment documenting the inverse operation.
-For complex changes (e.g. column type changes with data), note that rollback may require
-manual intervention.
-
-#### File naming convention
+**File naming convention:**
 ```
 V{version}__{description}.sql
 ```
@@ -76,6 +58,41 @@ V{version}__{description}.sql
 - Examples: `V1__create_users_table.sql`, `V2__fix_users_table.sql`
 - All files live in `src/main/resources/db/changelog/`
 - Each new file must be added to `db.changelog-master.xml`
+
+**Changeset ID convention:** use a short descriptive slug prefixed with the team name
+(e.g. `liftit:create-users-table`), not a bare integer. The `id` must be unique within the
+file.
+
+**Changelog file format:** SQL format only. Each file must begin with:
+```sql
+--liquibase formatted sql
+```
+Each changeset block begins with:
+```sql
+--changeset author:id
+```
+
+#### Never modify an applied changeset
+Once a changeset has been applied, Liquibase stores its checksum in the `DATABASECHANGELOG`
+table. Modifying the changeset SQL, its `id`, or the file path will cause either a checksum
+mismatch error (Liquibase **fails to start**) or double-execution on environments that have
+not yet applied it. This applies to whitespace and comment changes as well.
+
+**Rule: Applied changesets are immutable. To amend schema, create a new incremental
+changeset.**
+
+#### Include rollback statements
+Every changeset **must** include a `--rollback` block documenting the inverse operation.
+Explicit rollback logic is required for complex changes (column type changes, data
+transformations, constraint modifications) so that downgrades can be executed without manual
+SQL. For changes that Liquibase can auto-reverse (e.g. `CREATE TABLE`), a `--rollback`
+comment is still required to make intent explicit.
+
+```sql
+--changeset liftit:create-example-table
+CREATE TABLE example (...);
+--rollback DROP TABLE example;
+```
 
 ### Naming Conventions
 - snake_case
