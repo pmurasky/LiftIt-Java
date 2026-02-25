@@ -1,5 +1,8 @@
 package com.liftit;
 
+import com.liftit.exercise.exception.DuplicateExerciseException;
+import com.liftit.exercise.exception.ExerciseNotFoundException;
+import com.liftit.exercise.exception.ExerciseOwnershipException;
 import com.liftit.user.Auth0Id;
 import com.liftit.user.exception.DuplicateProfileException;
 import com.liftit.user.exception.DuplicateUserException;
@@ -40,6 +43,24 @@ class GlobalExceptionHandlerTest {
     void shouldReturn409ForDuplicateProfileException() throws Exception {
         ThrowingController.exceptionToThrow = DuplicateProfileException.forUser(1L);
         mockMvc.perform(get("/test")).andExpect(status().isConflict());
+    }
+
+    @Test
+    void shouldReturn409ForDuplicateExerciseException() throws Exception {
+        ThrowingController.exceptionToThrow = new DuplicateExerciseException("Bench Press");
+        mockMvc.perform(get("/test")).andExpect(status().isConflict());
+    }
+
+    @Test
+    void shouldReturn404ForExerciseNotFoundException() throws Exception {
+        ThrowingController.exceptionToThrow = new ExerciseNotFoundException(1L);
+        mockMvc.perform(get("/test")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldReturn403ForExerciseOwnershipException() throws Exception {
+        ThrowingController.exceptionToThrow = new ExerciseOwnershipException(1L);
+        mockMvc.perform(get("/test")).andExpect(status().isForbidden());
     }
 
     @Test

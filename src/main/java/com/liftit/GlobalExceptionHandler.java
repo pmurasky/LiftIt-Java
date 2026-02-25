@@ -1,5 +1,8 @@
 package com.liftit;
 
+import com.liftit.exercise.exception.DuplicateExerciseException;
+import com.liftit.exercise.exception.ExerciseNotFoundException;
+import com.liftit.exercise.exception.ExerciseOwnershipException;
 import com.liftit.user.exception.DuplicateProfileException;
 import com.liftit.user.exception.DuplicateUserException;
 import com.liftit.user.exception.UnauthorizedException;
@@ -27,6 +30,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateProfileException.class)
     public ResponseEntity<Void> handleDuplicateProfile(DuplicateProfileException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+
+    @ExceptionHandler(DuplicateExerciseException.class)
+    public ResponseEntity<Void> handleDuplicateExercise(DuplicateExerciseException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+
+    @ExceptionHandler(ExerciseNotFoundException.class)
+    public ResponseEntity<Void> handleExerciseNotFound(ExerciseNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    @ExceptionHandler(ExerciseOwnershipException.class)
+    public ResponseEntity<Void> handleExerciseOwnership(ExerciseOwnershipException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
     @ExceptionHandler(UnauthorizedException.class)
