@@ -13,5 +13,6 @@
     <include file="db/changelog/V6__create_muscles_table.sql"/>
     <include file="db/changelog/V7__seed_admin_user.sql"/>
     <include file="db/changelog/V8__seed_muscles.sql"/>
+    <include file="db/changelog/V9__create_exercise_categories_table.sql"/>
 
 </databaseChangeLog>
