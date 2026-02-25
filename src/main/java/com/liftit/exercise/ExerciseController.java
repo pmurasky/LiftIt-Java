@@ -5,6 +5,10 @@ import com.liftit.user.Auth0Id;
 import com.liftit.user.User;
 import com.liftit.user.UserRepository;
 import com.liftit.user.exception.UnauthorizedException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +42,7 @@ import java.util.List;
  * <p>All endpoints require authentication. Update and delete operations additionally
  * require that the authenticated user is the creator of the exercise.
  */
+@Tag(name = "Exercises", description = "Exercise management endpoints")
 @RestController
 @RequestMapping("/api/v1/exercises")
 public class ExerciseController {
@@ -56,6 +61,13 @@ public class ExerciseController {
      * @param request the exercise details
      * @return {@code 201 Created} with the created exercise
      */
+    @Operation(summary = "Create a custom exercise")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Exercise created"),
+        @ApiResponse(responseCode = "400", description = "Invalid request body"),
+        @ApiResponse(responseCode = "401", description = "Not authenticated"),
+        @ApiResponse(responseCode = "409", description = "Exercise name already exists")
+    })
     @PostMapping
     public ResponseEntity<ExerciseResponse> create(@Valid @RequestBody CreateExerciseRequest request) {
         Long userId = resolveUserId();
@@ -69,6 +81,12 @@ public class ExerciseController {
      * @param id the exercise ID
      * @return {@code 200 OK} with the exercise, or {@code 404 Not Found}
      */
+    @Operation(summary = "Get an exercise by ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Exercise found"),
+        @ApiResponse(responseCode = "401", description = "Not authenticated"),
+        @ApiResponse(responseCode = "404", description = "Exercise not found")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<ExerciseResponse> getById(@PathVariable Long id) {
         Exercise exercise = exerciseService.getById(id);
@@ -82,6 +100,15 @@ public class ExerciseController {
      * @param request the replacement fields
      * @return {@code 200 OK} with the updated exercise
      */
+    @Operation(summary = "Update an exercise (owner only)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Exercise updated"),
+        @ApiResponse(responseCode = "400", description = "Invalid request body"),
+        @ApiResponse(responseCode = "401", description = "Not authenticated"),
+        @ApiResponse(responseCode = "403", description = "Not the exercise owner"),
+        @ApiResponse(responseCode = "404", description = "Exercise not found"),
+        @ApiResponse(responseCode = "409", description = "Exercise name already exists")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<ExerciseResponse> update(
             @PathVariable Long id,
@@ -97,6 +124,13 @@ public class ExerciseController {
      * @param id the exercise ID
      * @return {@code 204 No Content}
      */
+    @Operation(summary = "Delete an exercise (owner only)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Exercise deleted"),
+        @ApiResponse(responseCode = "401", description = "Not authenticated"),
+        @ApiResponse(responseCode = "403", description = "Not the exercise owner"),
+        @ApiResponse(responseCode = "404", description = "Exercise not found")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         Long userId = resolveUserId();
@@ -114,6 +148,8 @@ public class ExerciseController {
      * @param size        page size (default 20)
      * @return {@code 200 OK} with the page of exercises
      */
+    @Operation(summary = "List exercises with optional filters and pagination")
+    @ApiResponse(responseCode = "200", description = "Paginated list of exercises")
     @GetMapping
     public ResponseEntity<Page<ExerciseResponse>> list(
             @RequestParam(required = false) ExerciseCategoryEnum category,
@@ -133,6 +169,8 @@ public class ExerciseController {
      *
      * @return {@code 200 OK} with the list of categories
      */
+    @Operation(summary = "List all exercise categories")
+    @ApiResponse(responseCode = "200", description = "List of categories")
     @GetMapping("/categories")
     public ResponseEntity<List<ExerciseCategory>> getCategories() {
         return ResponseEntity.ok(exerciseService.getCategories());
@@ -143,6 +181,8 @@ public class ExerciseController {
      *
      * @return {@code 200 OK} with the list of muscle groups
      */
+    @Operation(summary = "List all muscle groups")
+    @ApiResponse(responseCode = "200", description = "List of muscle groups")
     @GetMapping("/muscle-groups")
     public ResponseEntity<List<MuscleEnum>> getMuscleGroups() {
         return ResponseEntity.ok(exerciseService.getMuscleGroups());
