@@ -6,6 +6,9 @@ import com.liftit.exercise.exception.ExerciseOwnershipException;
 import com.liftit.user.exception.DuplicateProfileException;
 import com.liftit.user.exception.DuplicateUserException;
 import com.liftit.user.exception.UnauthorizedException;
+import com.liftit.workout.exception.WorkoutAlreadyCompletedException;
+import com.liftit.workout.exception.WorkoutNotFoundException;
+import com.liftit.workout.exception.WorkoutOwnershipException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -45,6 +48,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExerciseOwnershipException.class)
     public ResponseEntity<Void> handleExerciseOwnership(ExerciseOwnershipException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    @ExceptionHandler(WorkoutNotFoundException.class)
+    public ResponseEntity<Void> handleWorkoutNotFound(WorkoutNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    @ExceptionHandler(WorkoutOwnershipException.class)
+    public ResponseEntity<Void> handleWorkoutOwnership(WorkoutOwnershipException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    @ExceptionHandler(WorkoutAlreadyCompletedException.class)
+    public ResponseEntity<Void> handleWorkoutAlreadyCompleted(WorkoutAlreadyCompletedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 
     @ExceptionHandler(UnauthorizedException.class)
