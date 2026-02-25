@@ -15,5 +15,8 @@
     <include file="db/changelog/V8__seed_muscles.sql"/>
     <include file="db/changelog/V9__create_exercise_categories_table.sql"/>
     <include file="db/changelog/V10__create_exercises_table.sql"/>
+    <include file="db/changelog/V11__create_workouts_table.sql"/>
+    <include file="db/changelog/V12__create_workout_exercises_table.sql"/>
+    <include file="db/changelog/V13__create_workout_sets_table.sql"/>
 
 </databaseChangeLog>
