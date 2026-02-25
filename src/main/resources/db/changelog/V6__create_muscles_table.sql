@@ -2,7 +2,7 @@
 
 --changeset liftit:create-muscles-table
 CREATE TABLE muscles (
-    id         TINYINT                  NOT NULL,
+    id         BIGINT                   NOT NULL,
     name       VARCHAR(20)              NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_by BIGINT                   NOT NULL,

@@ -2,7 +2,7 @@
 
 --changeset liftit:create-exercise-categories-table
 CREATE TABLE exercise_categories (
-    id         TINYINT                  NOT NULL,
+    id         BIGINT                   NOT NULL,
     name       VARCHAR(50)              NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_by BIGINT                   NOT NULL,
