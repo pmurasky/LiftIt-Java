@@ -12,5 +12,6 @@
     <include file="db/changelog/V5__rename_height_cm_to_height_in.sql"/>
     <include file="db/changelog/V6__create_muscles_table.sql"/>
     <include file="db/changelog/V7__seed_admin_user.sql"/>
+    <include file="db/changelog/V8__seed_muscles.sql"/>
 
 </databaseChangeLog>
