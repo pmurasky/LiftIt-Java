@@ -1,7 +1,10 @@
 package com.liftit.exercise.persistence;
 
 import com.liftit.exercise.Exercise;
+import com.liftit.exercise.ExerciseFilter;
 import com.liftit.exercise.ExerciseRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -39,6 +42,13 @@ class JpaExerciseRepository implements ExerciseRepository {
     @Override
     public Optional<Exercise> findByName(String name) {
         return springDataRepository.findByName(name).map(ExerciseJpaEntity::toDomain);
+    }
+
+    @Override
+    public Page<Exercise> findAll(ExerciseFilter filter, Pageable pageable) {
+        return springDataRepository
+                .findAll(ExerciseSpecifications.from(filter), pageable)
+                .map(ExerciseJpaEntity::toDomain);
     }
 
     @Override

@@ -2,14 +2,20 @@ package com.liftit.exercise.persistence;
 
 import com.liftit.exercise.Exercise;
 import com.liftit.exercise.ExerciseCategoryEnum;
+import com.liftit.exercise.ExerciseFilter;
 import com.liftit.muscle.MuscleEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -115,6 +121,25 @@ class JpaExerciseRepositoryTest {
         // Then
         assertFalse(result.isPresent());
         verify(springDataRepository).findByName(NAME);
+    }
+
+    @Test
+    void shouldReturnPagedExercisesWhenFindAllCalled() {
+        // Given
+        Exercise exercise = new Exercise(ID, NAME, CATEGORY, MUSCLE_GROUPS, NOW, USER_ID, NOW, USER_ID);
+        ExerciseJpaEntity entity = ExerciseJpaEntity.fromDomain(exercise);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<ExerciseJpaEntity> entityPage = new PageImpl<>(List.of(entity), pageable, 1);
+        when(springDataRepository.findAll(any(Specification.class), any(PageRequest.class)))
+                .thenReturn(entityPage);
+
+        // When
+        Page<Exercise> result = repository.findAll(ExerciseFilter.empty(), pageable);
+
+        // Then
+        assertEquals(1, result.getTotalElements());
+        assertEquals(ID, result.getContent().getFirst().id());
+        verify(springDataRepository).findAll(any(Specification.class), any(PageRequest.class));
     }
 
     @Test

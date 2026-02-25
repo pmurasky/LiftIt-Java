@@ -1,5 +1,8 @@
 package com.liftit.exercise;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.Optional;
 
 /**
@@ -35,6 +38,17 @@ public interface ExerciseRepository {
      * @return an {@link Optional} containing the exercise, or empty if not found
      */
     Optional<Exercise> findByName(String name);
+
+    /**
+     * Returns a paginated list of exercises matching the given filter.
+     *
+     * <p>Any {@code null} field in the filter is treated as "no restriction".
+     *
+     * @param filter   the filter criteria; must not be null
+     * @param pageable the pagination and sorting parameters; must not be null
+     * @return a page of matching exercises
+     */
+    Page<Exercise> findAll(ExerciseFilter filter, Pageable pageable);
 
     /**
      * Deletes the exercise with the given ID. If no such exercise exists, this is a no-op.
