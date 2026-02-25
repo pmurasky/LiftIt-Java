@@ -8,7 +8,7 @@ CREATE TABLE workout_sets (
     reps                INTEGER        NOT NULL,
     weight_value        NUMERIC(10, 4) NOT NULL,
     weight_unit         VARCHAR(10)    NOT NULL,
-    rpe                 NUMERIC(3, 1),
+    rpe                 INTEGER,
     CONSTRAINT pk_workout_sets               PRIMARY KEY (id),
     CONSTRAINT fk_workout_sets_we            FOREIGN KEY (workout_exercise_id) REFERENCES workout_exercises (id) ON DELETE CASCADE
 );
